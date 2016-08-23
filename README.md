@@ -1,7 +1,7 @@
 # 15x4game
 Rpg-like economic strategy about moral acting and decisions making
 
-[Play](https://rawgit.com/teivaz/15x4game/master/build/release/index.html)
+[Play](https://rawgit.com/Teivaz/15x4game/react/build/release/index.html)
 
 ## How to build
 
