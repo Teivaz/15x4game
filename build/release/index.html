@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <title>15x4 Share Your Knowledge</title>
 
-    <link href="bootstrap.css" rel="stylesheet" type="text/css" media="all">
+    <link href='bootstrap.css' rel='stylesheet' type='text/css' media='all'>
     <link href="all.css" rel="stylesheet" type="text/css"/>
 
     <script src="https://npmcdn.com/react@15.3.1/dist/react.js"></script>
     <script src="https://npmcdn.com/react-dom@15.3.1/dist/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.30.3/react-bootstrap.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </head>
 
@@ -21,15 +22,12 @@
 
         <hr>
 
-        <div class="container " id="welcome_container">
-        <span id="welcome_indicator">
-            You do not have to be a scientist to save the planet. Act wisely, and share your knowledge!
-        </span>
+        <div class="container flex-container-column" id="goals_container">
         </div>
 
         <hr>
 
-        <div class="container " id="enthusiasm_container" title="Collects slowly. Need for many kind of actions.">
+        <div class="container " id="enthusiasm_container" title="Collects slowly. Need for seeking volunteers and upgrade things.">
             Enthusiasm: <span id="enthusiasm_indicator">0</span>/<span id="enthusiasm_max_indicator">100</span>
             <div id="enthusiasm"></div>
         </div>
@@ -46,6 +44,7 @@
         <div class="container init_secret" id="culture_container"></div>
         <div class="container init_secret" id="departments_container"></div>
         <div class="container init_secret" id="resources_container"></div>
+        <div class="container init_secret" id="С2_resources_container"></div>
         <div class="container init_secret" id="events_container"></div>
         <div class="container init_secret" id="offered_lecture_container"></div>
 
@@ -69,8 +68,6 @@
         <div class="container init_secret" id="startups_container"></div>
 
         <div class="container init_secret" id="objectives_container"></div>
-
-        <div class="container init_secret" id="badges_container"></div>
 
         <div class="container init_secret" id="reputations_container">
             <hr>
@@ -149,6 +146,8 @@
         <div class="container init_secret" id="rally_container"></div>
         <div class="container init_secret" id="castle_container"></div>
 
+        <div class="container init_secret" id="badges_container"></div>
+
         <hr>
         <div class="reset_container container" id="reset_container">
             <button onclick="Player.reset()" id="reset_button" title="Retired, my Lord?">Reset</button>
@@ -157,7 +156,7 @@
     </div>
 
 
-    <div>
+    <div id="log_container">
         <aside class="sidebar" id="log_panel_container">
             <span>Log Panel</span>
             <button onclick="LogPanel.clear()">ClearLog</button>
@@ -175,9 +174,6 @@
     </div>
 
 </div>
-
-
     <script language="JavaScript" src="./main.js"></script>
-
 </body>
 </html>

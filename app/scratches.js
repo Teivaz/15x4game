@@ -2,11 +2,10 @@
 
 
 function message(text) {
-    if(text == "A new day."){LogPanel.day++;}
+    if(text == "A new day."){}
     //else if (text.includes("Balance ratio")) {}
-    else{LogPanel.messages.push(new LogMessage(false,text));}
+    else{LogMessage(false,text);}
     console.log(text);
-    //console.log(LogPanel.messages);
 }
 
 

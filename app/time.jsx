@@ -14,7 +14,6 @@ var TimeReact = React.createClass({
     },
 
     tick: function () {
-
         var ticks = this.state.ticks + 1;
         this.setState({
             ticks: ticks,
@@ -22,6 +21,7 @@ var TimeReact = React.createClass({
             year:  Math.floor(ticks / 365),
             season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 365) / (365 / 4))],
         })
+        return ticks;
     },
 
     render: function() {
@@ -35,4 +35,3 @@ var TimeReact = React.createClass({
         );
     }
 });
-

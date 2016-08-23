@@ -40,7 +40,7 @@ module.exports = {
 		'app/events.db.js',
 		'app/Lecture.js',
 		'app/lectures.db.js',
-		'app/LogPanel.js',
+		'app/LogPanel.jsx',
 		'app/tips.js',
 		'app/time.jsx',
 		'app/main.jsx'

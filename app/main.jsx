@@ -1,4 +1,8 @@
 
+// class Main should generate all page at the level of #main_container
+// It should tick, set number of ticks/days/season to refs that need that
+
+
 var Main = React.createClass({
 
     componentDidMount: function() {
@@ -6,7 +10,7 @@ var Main = React.createClass({
     },
 
     tick: function() {
-        this.refs.Time.tick();
+        var ticks = this.refs.Time.tick();
         Player.tick();
         Gatherer.tick();
         Badge.tick();
@@ -17,6 +21,9 @@ var Main = React.createClass({
         Castle.tick();
         Lecture.tick();
         Startup.tick();
+
+        // remove it later
+        (window.LogSetTick && window.LogSetTick(ticks));
 
         message("A new day.");
 
@@ -39,8 +46,12 @@ window.onload = function() {
 
     ReactDOM.render(
         <Main />,
-        //document.getElementById('main_content') // Uncomment when done
+        //document.getElementById('main_container') // Uncomment when done
         document.getElementById('time_container')
+    );
+    ReactDOM.render(
+        <SideBarReact />,
+        document.getElementById('log_container')
     );
 
     Player.revealSecret('seek');

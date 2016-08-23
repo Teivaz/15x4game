@@ -10,7 +10,6 @@ function draw_all() {
 
     w("enthusiasm_indicator", Player.enthusiasm.toFixed(2));
 
-    w("day_indicator", LogPanel.day.toFixed());
     w("volunteers_indicator", Player.volunteers.toFixed(2));
     w("volunteers_memory_indicator", Player.volunteers_memory.toFixed(2));
 
@@ -52,18 +51,6 @@ function draw_all() {
     w("reputations", reputations_html);
 
 
-    FilterLogs();
-    var log_message_html = "";
-    log_message_html += "<ul>";
-    if(LogPanel.messages.length!=0) {
-        for (var i = LogPanel.messages.length-1; i >= 0; i--) {
-            if(LogPanel.messages[i].filter == true) {
-                log_message_html += '<li><div class="log_message_element"><span class="log_message_name">' + LogPanel.messages[i].text + '</span></div></li>';
-            };
-        };
-    };
-    log_message_html += "</ul>";
-    w("log_message", log_message_html);
 
 
 

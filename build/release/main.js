@@ -2380,40 +2380,48 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 /*
-var Billet = React.createClass({
+var BilletReact = React.createClass({
     constructor: function(name, base_cost_array, cost_grow_rate, text){
-        this.state = {
-            name: 
+        this.props
+    },
+
+    upgrade: function() {
+        if (this.level >= 60) {
+            message("Max level");
+            return false;
+        }
+        if (!Player.checkEnthusiasm()) return false;
+
+        if (Player.withdrawArray(this.getUpgradeCost())) {
+            this.state.level++;
+            Player.enthusiasm--;
         }
     },
 
-    upgrade: function() {},
-
     getInitialState: function() {
         return {
-            name: '',
-            day: 0,
-            year: 0,
-            season: 'winter'
+            level: 1,
+            cost: {},
+            price: []
         };
     },
     
     render: function() {
         return (
-            <div className="flex-element flex-container-column ${secret_class}" id="${key}_container">
+            <div className="flex-element flex-container-column {this.props.secret_class}" id="{this.props.key}_container">
                 <div className="flex-element flex-container-row ">
-                ${key.capitalizeFirstLetter()}
-                <div class="${secret_class}">: <span id="${key}level">${this.level}</span></div>
+                    {key.capitalizeFirstLetter()}
+                <div className="{this.props.secret_class}">: <span id="{key}level">{this.state.level}</span></div>
                 </div>
-                <div class="flex-element"><button onclick="${address}('${key}');">Up: ${price}</button></div>
-                <div class="flex-element">${this.text}</div>
+                <div className="flex-element"><button onclick="{this.props.address}('${key}');">Up: ${price}</button></div>
+                <div className="flex-element">{this.props.text}</div>
             </div>
         )
     }
 })
 */
 
-function Billet(name, base_cost_array, cost_grow_rate , text) {
+function Billet(name, base_cost_array, cost_grow_rate, text) {
     this.name = name;
     this.base_cost_array = base_cost_array;
     this.cost_grow_rate = cost_grow_rate;
@@ -2421,6 +2429,10 @@ function Billet(name, base_cost_array, cost_grow_rate , text) {
     this.level = 1;
 
     this.upgrade = function() {
+        if (this.level >= 60) {
+            message("Max level");
+            return false;
+        }
         if (!Player.checkEnthusiasm()) return false;
 
         if (Player.withdrawArray(this.getUpgradeCost())) {
@@ -2594,11 +2606,10 @@ Workplace.getHTML = function(key, secret_class, address) {
 
 
 function message(text) {
-    if(text == "A new day."){LogPanel.day++;}
+    if(text == "A new day."){}
     //else if (text.includes("Balance ratio")) {}
-    else{LogPanel.messages.push(new LogMessage(false,text));}
+    else{LogMessage(false,text);}
     console.log(text);
-    //console.log(LogPanel.messages);
 }
 
 
@@ -2670,14 +2681,15 @@ function sum( obj ) {
 
 
 var resources = ['likes', 'design', 'money', 'ideas'];
+var resources_rates = {'likes': 1000, 'design': 100, 'money': 10, 'ideas': 1};
+var resources_base_limits = {'likes': 5000, 'design': 500, 'money': 50, 'ideas': 5};
+
+var C2_resources = ['cultural_approval', 'cultural_concept', 'cultural_project', 'cultural_reform'];
+var C2_resources_rates = {'cultural_approval': 1000, 'cultural_concept': 100, 'cultural_project': 10, 'cultural_reform': 1};
 
 var space_resources = ['iron', 'oil', 'uranium', 'iridium'];
 
 var skill_to_resource = {'writing': 'likes', 'drawing': 'design', 'programming': 'money', 'management': 'ideas'};
-
-var resources_rates = {'likes': 1000, 'design': 100, 'money': 10, 'ideas': 1};
-
-var resources_base_limits = {'likes': 5000, 'design': 500, 'money': 50, 'ideas': 5};
 
 var culture_rate = 1;
 
@@ -2700,15 +2712,17 @@ function draw_all() {
 
     //w("time_container", Time.getHTML());
 
+    w("goals_container", Goal.getHTML());
+
     w("enthusiasm_indicator", Player.enthusiasm.toFixed(2));
 
-    w("day_indicator", LogPanel.day.toFixed());
     w("volunteers_indicator", Player.volunteers.toFixed(2));
     w("volunteers_memory_indicator", Player.volunteers_memory.toFixed(2));
 
     w("culture_container", Civilization.getHTML());
     w("departments_container", Department.getHTML());
-    w("resources_container", Storages.getHTML());
+    w("resources_container", Storages.getR1HTML());
+    w("С2_resources_container", Storages.getC2HTML());
     w("events_container", Event.getHTML());
     w("offered_lecture_container", Lecture.getHTML());
 
@@ -2743,18 +2757,6 @@ function draw_all() {
     w("reputations", reputations_html);
 
 
-    FilterLogs();
-    var log_message_html = "";
-    log_message_html += "<ul>";
-    if(LogPanel.messages.length!=0) {
-        for (var i = LogPanel.messages.length-1; i >= 0; i--) {
-            if(LogPanel.messages[i].filter == true) {
-                log_message_html += '<li><div class="log_message_element"><span class="log_message_name">' + LogPanel.messages[i].text + '</span></div></li>';
-            };
-        };
-    };
-    log_message_html += "</ul>";
-    w("log_message", log_message_html);
 
 
 
@@ -2773,6 +2775,14 @@ function Ship() {
 
     this.cargo = {
         resources: {'iron': 0, 'oil': 0, 'uranium': 0, 'iridium': 0}
+    };
+
+    this.checkSpace = function () {
+        if (this.getCargoCapacity() > this.getCargoFullness()) {
+            return true;
+        }
+        message("Not enough free space");
+        return false;
     };
 
     this.reward = function(resource, quantity, silent) {
@@ -2804,16 +2814,29 @@ function Ship() {
     };
 
     this.getSpeed = function () {
-        return this.speed;
+        return (0.5 * this.speed) + ((0.5 * this.speed) * 0.01 * (this.getCargoCapacity() - this.getCargoFullness()));
     };
 
 }
 
 
-
 var SpaceHelper = {};
+
 SpaceHelper.generateMarket = function() {
     return {'iron': {price: 100, count: 100}, 'oil': {price: 100, count: 100}, 'uranium': {price: 100, count: 100}, 'iridium': {price: 100, count: 100}};
+};
+
+SpaceHelper.generateBeltAction = function(type) {
+    return {
+        'name': 'Mine '+type,
+        'code': function () {
+            if (Player.ship.checkSpace()) {
+                if (Player.withdrawEnthusiasm()) {
+                    Player.ship.reward(type, 1);
+                }
+            }
+        }
+    }
 };
 
 
@@ -2828,6 +2851,7 @@ Space = {
     flight: {
         counter: 0,
         length: 0,
+        warp_active: 0,
         target: {id: null, type: null, obj: null},
         arrival_function: {}
     },
@@ -2855,8 +2879,10 @@ Space = {
                         action: {
                             name: 'Transform 1000 conventional units to 1 oil',
                             code: function () {
-                                if (Player.withdraw('conventional_units', 1000)) {
-                                    Player.ship.reward('oil', 1);
+                                if (Player.ship.checkSpace()) {
+                                    if (Player.withdraw('conventional_units', 1000)) {
+                                        Player.ship.reward('oil', 1);
+                                    }
                                 }
                             }
                         },
@@ -2892,7 +2918,7 @@ Space = {
                     {
                         name: 'Education University',
                         action: {
-                            name: 'Transform 100 likes to 1 uranium',
+                            name: 'Transform 1000 likes to 1 uranium',
                             code: function () {
                                 if (Player.withdraw('likes', 1000)) {
                                     Player.ship.reward('uranium', 1);
@@ -2907,7 +2933,7 @@ Space = {
                             name: 'Transform 10 money to 1 iridium',
                             code: function () {
                                 if (Player.withdraw('money', 10)) {
-                                    Player.ship.reward('iridium,', 1);
+                                    Player.ship.reward('iridium', 1);
                                 }
                             }
                         },
@@ -2916,17 +2942,18 @@ Space = {
                 ],
 
                 belts: [
-                    {name: 'Main-belt', produce: 'iron', rocks: []},
-                    {name: 'Greek camp', produce: 'iron', rocks: []},
-                    {name: 'Trojan camp', produce: 'iron', rocks: []},
-                    {name: 'Centaurs tribe', produce: 'iron', rocks: []}
+                    {name: 'Main-belt', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Greek camp', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Trojan camp', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}},
+                    {name: 'Centaurs tribe', action: SpaceHelper.generateBeltAction('iron'), rocks: {name: 'iron', count: 60}}
                 ]
             },
             {
                 name: 'Orsala',
 
                 planets: [
-                    {name: 'Gliese',
+                    {
+                        name: 'Gliese',
                         action: {
                             name: 'Transform 100 oil to 1 cultural reform',
                             code: function () {
@@ -2938,7 +2965,6 @@ Space = {
                         services: {store: {}, trade: {}}},
                     {
                         name: 'Arette',
-                        produce: 'iridium',
                         action: {
                             name: 'Transform 1000 conventional units to 1 iridium',
                             code: function () {
@@ -2949,7 +2975,8 @@ Space = {
                         },
                         services: {store: {}, trade: {}}
                     },
-                    {name: 'Kepler',
+                    {
+                        name: 'Kepler',
                         action: {
                             name: 'Transform 1000 conventional units to Repair',
                             code: function () {
@@ -2959,7 +2986,8 @@ Space = {
                             }
                         },
                         services: {store: {}, trade: {}}},
-                    {name: 'Ko Pur',
+                    {
+                        name: 'Ko Pur',
                         action: {
                             name: 'Transform 100 iron to 1 cultural concept',
                             code: function () {
@@ -2999,10 +3027,10 @@ Space = {
                 ],
 
                 belts: [
-                    {name: 'Main-belt', produce: 'uranium', rocks: []},
-                    {name: 'Maya camp', produce: 'uranium', rocks: []},
-                    {name: 'Aztec camp', produce: 'uranium', rocks: []},
-                    {name: 'Leviathan shore', produce: 'uranium', rocks: []}
+                    {name: 'Main-belt', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Maya camp', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Aztec camp', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}},
+                    {name: 'Leviathan shore', action: SpaceHelper.generateBeltAction('uranium'), rocks: {name: 'uranium', count: 60}}
                 ]
             }
         ]
@@ -3011,12 +3039,16 @@ Space = {
 
 Space.tick = function () {
     if (this.state == 'flight') {
-        this.flight.counter++;
-        if (this.flight.counter == this.flight.length) {
+        this.flight.counter += this.calcSpeed();
+        if (this.flight.counter >= this.flight.length) {
             message("Arrival!");
             this.flight_arrival_function();
         }
     }
+};
+
+Space.calcSpeed = function () {
+    return (Player.ship.getSpeed()/100) * ((this.flight.warp_active ? 10 : 1));
 };
 
 Space.getHTML = function () {
@@ -3036,8 +3068,8 @@ Space.getHTML = function () {
     });
     html += `</div>
     <div class="flex-element flex-container-row">
-        <div class="flex-element">Cargo: ${Player.ship.getCargoFullness()}/${Player.ship.getCargoCapacity()}</div>
-        <div class="flex-element">Speed: 100/100</div>
+        <div class="flex-element">Cargo: ${Player.ship.getCargoFullness().toFixed(2)}/${Player.ship.getCargoCapacity()}</div>
+        <div class="flex-element">Speed: ${(Space.calcSpeed()*100).toFixed(0)}/100</div>
         <div class="flex-element">Armor: 100/100</div>
         <div class="flex-element">Shield: 100/100</div>
     </div>
@@ -3054,10 +3086,13 @@ Space.getHTML = function () {
 Space.getSpaceTitle = function () {
     var html = `Space. `;
 
-
-
     if (Space.state == 'flight') {
-        html += 'You in warp.';
+        if (Space.flight.warp_active) {
+            html += 'You in warp.';
+        }
+        else {
+            html += 'You in flight.';
+        }
     }
     else {
         if (Space.current_object.type == 'system') {
@@ -3099,9 +3134,9 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
-            html +=`<div>Sped: ${Player.ship.getSpeed()}. </div>`;
             html +=`<div>Destination: ${Space.flight.target.obj.name} ${Space.flight.target.type}. </div>`;
-            html +=`<div>Progress: ${Space.flight.counter}/${Space.flight.length} </div>`;
+            html +=`<div>Progress: ${Space.flight.counter.toFixed(0)}/${Space.flight.length} </div>`;
+            if (Space.flight.warp_active !== 1) { html +=`<button onclick="Space.flyFast()">Activate Warp Drive</button>`; }
             html +=`</div></div>`;
             return html;
         },
@@ -3118,6 +3153,7 @@ Space.getSpaceString = function () {
             var html = `
             <div class="flex-element flex-container-column">
                 <div class="flex-element flex-container-column">`;
+            html +=`<button onclick="Space.map.systems[${Space.current_system}]['${Space.current_object.type}s'][${Space.current_object.id}].action.code()">${Space.map.systems[Space.current_system][Space.current_object.type + 's'][Space.current_object.id].action.name}</button>`;
             html +=`<button onclick="Space.start()">Moving away from the belt.</button>`;
             html +=`</div></div>`;
             return html;
@@ -3144,21 +3180,38 @@ Space.startFly = function(type, id) {
 
     if (type == 'system') {
         this.flight.target.obj = Space.map.systems[id];
-        this.current_system = id;
+        if (Space.current_object.type == 'system') {
+            this.current_system = id;
+            this.flight.length = 420;
+        }
+        else {
+            this.flight.length = 60;
+        }
     }
     else {
         this.flight.target.obj = Space.map.systems[Space.current_system][type + 's'][id];
+        this.flight.length = 60;
     }
     this.flight.counter = 0;
-    this.flight.length = 5;
     this.flight_arrival_function = function () {
         Space.state = Space.flight.target.type;
         Space.current_object.id = Space.flight.target.id;
         Space.current_object.type = Space.flight.target.type;
+        Space.flight.warp_active = 0;
         Space.flight.target = {id: null, type: null, obj: null};
     }
 
 
+};
+
+Space.flyFast = function() {
+    if (Player.action_points < 1) {
+        message("Not enough action points.");
+        return false;
+    }
+    message('Warp drive active');
+    Player.action_points--;
+    Space.flight.warp_active = 1;
 };
 
 Space.start = function() {
@@ -3745,6 +3798,7 @@ var Gatherer = {
     collection: {},
     events: {
         knowledge_sharing: 0,
+        hold_events: 0,
 
         learn: {selfStudy: 0, books: 0, work: 0, petProject: 0},
         increase: 0,
@@ -3766,20 +3820,11 @@ Gatherer.collect = function (resource, quantity) {
     }
 };
 
+Gatherer.holdEvent = function () {
+    this.events.hold_events++;
+};
+
 Gatherer.increaseSkill = function (skill, value) {
-    if (Player[skill] - value < 15 && Player[skill] >= 15 ) { badges.achieve(skill + " 1"); }
-    if (Player[skill] - value < 30 && Player[skill] >= 30 ) {
-        badges.achieve(skill + " 2");
-        Player.addSupervision(skills_departments[skill]);
-    }
-    if (Player[skill] - value < 45 && Player[skill] >= 45 ) { badges.achieve(skill + " 3"); }
-    if (Player[skill] - value < 60 && Player[skill] >= 60 ) { badges.achieve(skill + " 4"); }
-
-    if (this.events.increase_skill < 15 && this.events.increase_skill + 1 >= 15 ) { badges.achieve("learn 1"); }
-    if (this.events.increase_skill < 30 && this.events.increase_skill + 1 >= 30 ) { badges.achieve("learn 2"); }
-    if (this.events.increase_skill < 45 && this.events.increase_skill + 1 >= 45 ) { badges.achieve("learn 3"); }
-    if (this.events.increase_skill < 60 && this.events.increase_skill + 1 >= 60 ) { badges.achieve("learn 4"); }
-
     this.events.increase_skill++;
 };
 
@@ -3793,32 +3838,12 @@ Gatherer.increaseResource = function (resource, value) {
         if (Player[resource] - value < (rate * 100) && Player[resource] >= (rate * 100)  ) { badges.achieve(resource + " 3"); }
         if (Player[resource] - value < (rate * 1000) && Player[resource] >= (rate * 1000)  ) { badges.achieve(resource + " 4"); }
     }
-    else {
-        /*
-        rate = resources_rates[resource];
-        if (Player[resource] - value < (rate * 1) && Player[resource] >= (rate * 1)  ) { badges.achieve(resource + " 1"); }
-        if (Player[resource] - value < (rate * 10) && Player[resource] >= (rate * 10)  ) { badges.achieve(resource + " 2"); }
-        if (Player[resource] - value < (rate * 100) && Player[resource] >= (rate * 100)  ) { badges.achieve(resource + " 3"); }
-        if (Player[resource] - value < (rate * 1000) && Player[resource] >= (rate * 1000)  ) { badges.achieve(resource + " 4"); }
-        */
-    }
-/*
-    if (this.events.increase_resource < 100 && this.events.increase_resource + 1 >= 100 ) { badges.achieve("resources 1"); }
-    if (this.events.increase_resource < 1000 && this.events.increase_resource + 1 >= 1000 ) { badges.achieve("resources 2");  Player.revealSecret('objectives'); }
-    if (this.events.increase_resource < 10000 && this.events.increase_resource + 1 >= 10000 ) { badges.achieve("resources 3"); Player.revealSecret('sharing'); }
-    if (this.events.increase_resource < 100000 && this.events.increase_resource + 1 >= 100000 ) { badges.achieve("resources 4"); }
-*/
+
     this.events.increase_resource++;
 };
 
 
 Gatherer.decrease = function (skill, value) {
-    /*
-    if (Player[skill] < 15 && Player[skill] + value >= 15 ) { badges.achieve(skill + " 1"); }
-    if (Player[skill] < 30 && Player[skill] + value >= 30 ) { badges.achieve(skill + " 2"); }
-    if (Player[skill] < 45 && Player[skill] + value >= 45 ) { badges.achieve(skill + " 3"); }
-    if (Player[skill] < 60 && Player[skill] + value >= 60 ) { badges.achieve(skill + " 4"); }
-    */
     this.events.decrease++;
 };
 
@@ -3831,29 +3856,24 @@ Gatherer.learn = function (method) {
 };
 
 Gatherer.search = function () { // ?
-    if (this.events.search < 15 && this.events.search + 1 >= 15) { badges.achieve(method + " 1"); }
+    /*if (this.events.search < 15 && this.events.search + 1 >= 15) { badges.achieve(method + " 1"); }
     if (this.events.search < 30 && this.events.search + 1 >= 30) { badges.achieve(method + " 2"); }
     if (this.events.search < 45 && this.events.search + 1 >= 45) { badges.achieve(method + " 3"); }
-    if (this.events.search < 60 && this.events.search + 1 >= 60) { badges.achieve(method + " 4"); }
+    if (this.events.search < 60 && this.events.search + 1 >= 60) { badges.achieve(method + " 4"); }*/
     this.events.search++;
 };
 
 Gatherer.found = function (inflow) {
-    if (Player.volunteers_memory < 15 && Player.volunteers_memory + inflow >= 15) { badges.achieve("volunteers 1"); Player.revealSecret('education'); Player.revealSecret('teamwork'); }
+    return false;
+
+    /*if (Player.volunteers_memory < 15 && Player.volunteers_memory + inflow >= 15) { badges.achieve("volunteers 1"); Player.revealSecret('education'); Player.revealSecret('teamwork'); }
     if (Player.volunteers_memory < 30 && Player.volunteers_memory + inflow >= 30) { badges.achieve("volunteers 2"); Player.revealSecret('departments'); }
     if (Player.volunteers_memory < 45 && Player.volunteers_memory + inflow >= 45) { badges.achieve("volunteers 3"); Player.revealSecret('motivation'); }
     if (Player.volunteers_memory < 60 && Player.volunteers_memory + inflow >= 60) { badges.achieve("volunteers 4"); Player.revealSecret('activism'); }
-
+    */
 };
 
 Gatherer.tick = function () {
-    /*
-    if (this.events.ticks < 7 && this.events.ticks + 1 >= 7 ) {  }
-    if (this.events.ticks < 30 && this.events.ticks + 1 >= 30 ) { badges.achieve("tick 1");    }
-    if (this.events.ticks < 356 && this.events.ticks + 1 >= 356 ) { badges.achieve("tick 2"); Player.revealSecret('upgrade_department'); Player.revealSecret('cancel_event'); }
-    if (this.events.ticks < 356*10 && this.events.ticks + 1 >= 356*10 ) { badges.achieve("tick 3"); Player.revealSecret('invent'); }
-    if (this.events.ticks < 356*100 && this.events.ticks + 1 >= 356*100 ) { badges.achieve("tick 4"); }
-    */
     this.events.ticks++;
 };
 
@@ -3931,8 +3951,8 @@ var Civilization = {
     updates: {
         communication: new Billet('communication', {culture: culture_rate}, 1.6, "Raises culture soft-cap."),
         attentiveness: new Billet('attentiveness', {culture: culture_rate}, 1.7, "Soften culture soft-cap."),
-        teamwork: new Billet('teamwork', {culture: culture_rate}, 1.8, "Expands the maximum size of the teams."),
-        sharing: new Billet('sharing', {culture: culture_rate * 10}, 1.9, "Expands maximum storage size."),
+        teamwork: new Billet('teamwork', {culture: culture_rate * 5}, 1.4, "Expands the maximum size of the teams."),
+        sharing: new Billet('sharing', {culture: culture_rate * 10}, 1.7, "Expands maximum storage size."),
     },
     works: {
         popularization: new Workplace('popularization', {culture: culture_rate}, 1.4, "Slowly increase volunteers, consuming culture.",
@@ -3971,7 +3991,7 @@ Civilization.tick = function() {
         Player.culture_rate -= Civilization.works.activism.workers * 0.01;
         this.happiness -= Civilization.works.activism.getEfficiency() / Civilization.getHappiness();
         var debuff = Player.volunteers_memory * 1000 + Player.action_points * 1000 + (Player.likes + Player.design * 10 + Player.money * 100 + Player.ideas * 1000);
-        Player.enthusiasm += Civilization.works.activism.getEfficiency() / Civilization.getHappiness() * 1 *Math.max(0, (-1 * Math.pow((Player.enthusiasm-100)/100, 3)));
+        Player.enthusiasm += Civilization.works.activism.getEfficiency() / Civilization.getHappiness() * 0.1 * Math.max(0, (-1 * Math.pow((Player.enthusiasm-100)/100, 3)));
         Player.action_points += Civilization.works.activism.getEfficiency() / Civilization.getHappiness() * 50 / (1 + debuff);
     }
 
@@ -4279,6 +4299,7 @@ Player.seek = function() {
     var inflow = 1 / (0.05 * 0.01 * Math.pow(this.volunteers_memory, 4) + 1);
 
     if (this.volunteers_memory > 3) {
+        goals.achieve('culture');
         Player.revealSecret('culture');
     }
     else {
@@ -4297,6 +4318,14 @@ Player.checkEnthusiasm = function () {
         return false;
     }
     return true;
+};
+
+Player.withdrawEnthusiasm = function () {
+    if (this.checkEnthusiasm()) {
+        this.enthusiasm--;
+        return true;
+    }
+    return false;
 };
 
 Player.reset = function () {
@@ -4433,6 +4462,7 @@ Player.getLimit = function (resource) {
 
 Player.withdraw = function(resource, quantity, silent) {
     if (this[resource] - quantity < 0) {
+        if (!silent) message(`Not enough ${resource}.`);
         return false;
     }
     this[resource] -= quantity;
@@ -4505,7 +4535,7 @@ Player.countQuantity=function(skill,btnName){
 
 Player.selfStudy = function(skill) {
     if (this.knowledge < 1) {
-        message("You are weak-knowledged for study.");
+        message("You are weak-knowledgeed for study.");
         return false;
     }
 
@@ -4520,7 +4550,7 @@ Player.selfStudy = function(skill) {
 
 Player.books = function(skill) {
     if (this.knowledge < 1) {
-        message("You are weak-knowledged for reading.");
+        message("You are weak-knowledgeed for reading.");
         return false;
     }
     if (!this.checkReputation('thoughtfulness')) this.knowledge--;
@@ -4533,7 +4563,7 @@ Player.books = function(skill) {
 
 Player.work = function(skill) {
     if (this.knowledge < 1) {
-        message("You are weak-knowledged for the job.");
+        message("You are weak-knowledgeed for the job.");
         return false;
     }
     if (!this.checkReputation('thoughtfulness')) this.knowledge--;
@@ -4541,19 +4571,19 @@ Player.work = function(skill) {
     switch(skill) {
         case "writing":
             message("You worked as a copywriter.");
-            this.reward("likes", resources_rates["likes"] * Math.max(this[skill], 0));
+            this.reward("money", Math.max(this[skill], 0));
             break;
         case "drawing":
             message("You worked as a designer.");
-            this.reward("design", resources_rates["design"] * Math.max((this[skill]*2)-30, 0));
+            this.reward("money", Math.max((this[skill]*2)-30, 0));
             break;
         case "programming":
             message("You worked as a coder.");
-            this.reward("money", resources_rates["money"] * Math.max((this[skill]*4)-120, 0));
+            this.reward("money", Math.max((this[skill]*4)-120, 0));
             break;
         case "management":
             message("You worked as a PM.");
-            this.reward("ideas", resources_rates["ideas"] * Math.max((this[skill]*10)-450, 0));
+            this.reward("money", Math.max((this[skill]*10)-450, 0));
             break;
     }
 
@@ -4567,7 +4597,7 @@ Player.work = function(skill) {
 
 Player.petProject = function(skill) {
     if (this.knowledge < 1) {
-        message("You are weak-knowledged for working.");
+        message("You are weak-knowledgeed for working.");
         return false;
     }
     if (!this.checkReputation('thoughtfulness')) this.knowledge--;
@@ -4602,21 +4632,21 @@ var Storages = {
 			ideas: new Billet('storage for ideas', {ideas: resources_rates.ideas}, 1.3, "Expands the maximum size of the ideas.")
 		}, 
 		tier3: {
-			likes: new Billet('storage for likes', {likes: resources_rates.likes}, 1.4, "Expands the maximum size of the likes."),
-			design: new Billet('storage for design', {design: resources_rates.design}, 1.4, "Expands the maximum size of the design."),
-			money: new Billet('storage for money', {money: resources_rates.money}, 1.4, "Expands the maximum size of the money."),
-			ideas: new Billet('storage for ideas', {ideas: resources_rates.ideas}, 1.4, "Expands the maximum size of the ideas.")
+			likes: new Billet('storage for likes', {cultural_approval: C2_resources_rates.cultural_approval}, 1.4, "Expands the maximum size of the likes."),
+			design: new Billet('storage for design', {cultural_concept: C2_resources_rates.cultural_concept}, 1.4, "Expands the maximum size of the design."),
+			money: new Billet('storage for money', {cultural_project: C2_resources_rates.cultural_project}, 1.4, "Expands the maximum size of the money."),
+			ideas: new Billet('storage for ideas', {cultural_reform: C2_resources_rates.cultural_reform}, 1.4, "Expands the maximum size of the ideas.")
 		}, 
 		tier4: {
-			likes: new Billet('storage for likes', {likes: resources_rates.likes}, 1.5, "Expands the maximum size of the likes."),
-			design: new Billet('storage for design', {design: resources_rates.design}, 1.5, "Expands the maximum size of the design."),
-			money: new Billet('storage for money', {money: resources_rates.money}, 1.5, "Expands the maximum size of the money."),
-			ideas: new Billet('storage for ideas', {ideas: resources_rates.ideas}, 1.5, "Expands the maximum size of the ideas.")
+			likes: new Billet('storage for likes', {cultural_approval: C2_resources_rates.cultural_approval}, 1.5, "Expands the maximum size of the likes."),
+			design: new Billet('storage for design', {cultural_concept: C2_resources_rates.cultural_concept}, 1.5, "Expands the maximum size of the design."),
+			money: new Billet('storage for money', {cultural_project: C2_resources_rates.cultural_project}, 1.5, "Expands the maximum size of the money."),
+			ideas: new Billet('storage for ideas', {cultural_reform: C2_resources_rates.cultural_reform}, 1.5, "Expands the maximum size of the ideas.")
 		} 
 	}	
 };
 
-Storages.getHTML = function () {
+Storages.getR1HTML = function () {
     var html = `<hr><button class="collapsar" data-toggle="collapse" data-target="#resources_collapse">-</button>
     Resources:
     <div id="resources">`;
@@ -4640,7 +4670,7 @@ Storages.getHTML = function () {
         storages_html += `
         	<div class="flex-element ${secret_class}" id="sold_for_${resource}_1_container">
 	        	${sb.tier1[resource].name}: ${sb.tier1[resource].level}
-	            <button onclick = "Storages.upgradeBuilding(1, \'${resource}\')">Up1:
+	            <button onclick = "Storages.upgradeBuilding(1, '${resource}')">Up1:
 	            	${Storages.getUpgradeCostBuilding(1, resource)[resource].toFixed(2)} ${resource} 
 	            </button>
 	        </div>`;
@@ -4649,7 +4679,7 @@ Storages.getHTML = function () {
         storages_html += `
         	<div class="flex-element ${secret_class}">
 	        	${sb.tier2[resource].name}: ${sb.tier2[resource].level}
-	            <button onclick = "Storages.upgradeBuilding(2, \'${resource}\')">Up2: 
+	            <button onclick = "Storages.upgradeBuilding(2, '${resource}')">Up2: 
 	            	${Storages.getUpgradeCostBuilding(2, resource)[resource].toFixed(2)} ${resource} 
 	            </button>
 	        </div>`;
@@ -4658,8 +4688,8 @@ Storages.getHTML = function () {
         storages_html += `
         	<div class="flex-element ${secret_class}">
 	        	${sb.tier3[resource].name}: ${sb.tier3[resource].level}
-	            <button onclick = "Storages.upgradeBuilding(3, \'${resource}\')">Up3:
-	            	${Storages.getUpgradeCostBuilding(3, resource)[resource].toFixed(2)} ${resource} 
+	            <button onclick = "Storages.upgradeBuilding(3, '${resource}')">Up3:
+	            	${Storages.getUpgradeCostBuildingHTML(3, resource)}
 	            </button>
 	        </div>`;
 
@@ -4668,13 +4698,13 @@ Storages.getHTML = function () {
         	<div class="flex-element ${secret_class}">
 	        	${sb.tier4[resource].name}:  ${sb.tier4[resource].level} 
 	            <button onclick = "Storages.upgradeBuilding(4, '${resource}')">Up4:
-	            	${Storages.getUpgradeCostBuilding(4, resource)[resource].toFixed(2)} ${resource} 
+	            	${Storages.getUpgradeCostBuildingHTML(4, resource)}
 	            </button>
 	        </div>`;
 
         resources_html += `</div>`;
 
-		storages_html += '</div>';
+		storages_html += `</div>`;
     });
 
 
@@ -4690,6 +4720,24 @@ Storages.getHTML = function () {
     return html;
 };
 
+Storages.getC2HTML = function () {
+    var html = `<hr><button class="collapsar" data-toggle="collapse" data-target="#resources_collapse">-</button>
+    Cultural Artifacts:
+    <div id="C2_resources" class="flex-element flex-container-row">`;
+   
+    C2_resources.forEach(function(C2_resource) {		
+        html += `
+       	<div class="flex-element resource_element"> 
+        	${C2_resource.capitalizeFirstLetter()}: 
+            ${Player[C2_resource].toFixed(2)} 
+            <span class="flex-element" id="${C2_resource}_indicator"></span>`;    
+        	html += `
+        </div>`;	
+    });
+
+    html += `</div>`;
+    return html;
+};
 
 
 Storages.increaseBuilding = function(tier, building) {
@@ -4709,6 +4757,16 @@ Storages.getUpgradeCostBuilding = function(tier, building) {
     return this.buildings['tier' + tier][building].getUpgradeCost();
 };
 
+Storages.getUpgradeCostBuildingHTML = function(tier, building) {
+	var html = '';
+	var price = [];
+	var upgrade_cost = this.buildings['tier' + tier][building].getUpgradeCost();
+   	for (var resource_name in upgrade_cost) {
+            price.push(`${upgrade_cost[resource_name].toFixed(2)} ${resource_name}`);
+        }
+        price = price.join(', ');
+    return price;
+};
 
 
 var skills = ["writing", "drawing", "programming", "management"];
@@ -4777,26 +4835,26 @@ badges.db = [
 
     new Badge("tick 1", "Lost coordinator", "A month of your coordination is passed. You understand what's what.",
         function () { return (Gatherer.events.ticks > 30); }, function () {}),
-    new Badge("tick 2", "Verified coordinator", "A ear of your coordination is passed. You steeled enough to avoid mistakes.",
-        function () { return (Gatherer.events.ticks > 356); }, function () { Player.revealSecret('upgrade_department'); Player.revealSecret('cancel_event');  }),
-    new Badge("tick 3", "Experienced coordinator", "A ten ear of your coordination is passed. You ready to invent something new.",
-        function () { return (Gatherer.events.ticks > 356*10); }, function () { Player.revealSecret('invent');  }),
-    new Badge("tick 4", "Hardened coordinator", "A century of your coordination is passed.",
+    new Badge("tick 2", "Verified coordinator", "A year of your coordination is passed. You steeled enough to avoid mistakes.",
+        function () { return (Gatherer.events.ticks > 356); }, function () {}),
+    new Badge("tick 3", "Experienced coordinator", "A ten year of your coordination is passed. You ready to invent something new.",
+        function () { return (Gatherer.events.ticks > 356*10); }, function () {}),
+    new Badge("tick 4", "Hardened coordinator", "A century of your coordination is passed. You elder and htonic.",
         function () { return (Gatherer.events.ticks > 356*100); }, function () {}),
 
     
     new Badge("resources 1", "Resources dabbling", "You collect some.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000); }, function () { Player.revealSecret('objectives'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500); }, function () { Player.revealSecret('objectives'); goals.achieve('resources 1'); }),
     new Badge("resources 2", "Resources collector", "You collect many.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 10); }, function () { Player.revealSecret('events'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 10); }, function () { Player.revealSecret('events'); goals.achieve('resources 2'); }),
     new Badge("resources 3", "Resources achiever", "You have wealth.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 100); }, function () { Player.revealSecret('sharing'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 100); }, function () { Player.revealSecret('sharing'); goals.achieve('resources 3'); }),
     new Badge("resources 4", "Resources tycoon", "You have a huge savings.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 1000); }, function () {}),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 1000); }, function () {}),
 
 
     new Badge("communication 1", "Talking", "Communication upgraded to level 15.",
-        function () { return (Civilization.updates.communication.level >= 15); }, function () {}),
+        function () { return (Civilization.updates.communication.level >= 15); }, function () { Player.revealSecret('attentiveness'); goals.achieve('communication 1'); }),
     new Badge("communication 2", "Discussing", "Communication upgraded to level 30.",
         function () { return (Civilization.updates.communication.level >= 30); }, function () {}),
     new Badge("communication 3", "Telepathy", "Communication upgraded to level 45.",
@@ -4814,7 +4872,7 @@ badges.db = [
         function () { return (Civilization.updates.attentiveness.level >= 60); }, function () {}),
 
     new Badge("teamwork 1", "Group work", "Teamwork upgraded to level 15.",
-        function () { return (Civilization.updates.teamwork.level >= 15); }, function () {}),
+        function () { return (Civilization.updates.teamwork.level >= 15); }, function () { Player.revealSecret('upgrade_department'); goals.achieve('teamwork 1'); }),
     new Badge("teamwork 2", "Command work", "Teamwork upgraded to level 30.",
         function () { return (Civilization.updates.teamwork.level >= 30); }, function () {}),
     new Badge("teamwork 3", "Cooperative work", "Teamwork upgraded to level 45.",
@@ -4833,7 +4891,7 @@ badges.db = [
 
 
     new Badge("popularization 1", "Light of Science", "Popularization upgraded to level 15.",
-        function () { return (Civilization.works.popularization.level >= 15); }, function () {}),
+        function () { return (Civilization.works.popularization.level >= 15); }, function () { Player.revealSecret('education'); goals.achieve('popularization 1'); }),
     new Badge("popularization 2", "Trend to quantum", "Popularization upgraded to level 30.",
         function () { return (Civilization.works.popularization.level >= 30); }, function () {}),
     new Badge("popularization 3", "Viral ideas", "Popularization upgraded to level 45.",
@@ -4851,7 +4909,7 @@ badges.db = [
         function () { return (Civilization.works.education.level >= 60); }, function () {}),
 
     new Badge("motivation 1", "Working with target", "Motivation upgraded to level 15.",
-        function () { return (Civilization.works.motivation.level >= 15); }, function () {}),
+        function () { return (Civilization.works.motivation.level >= 15); }, function () { Player.revealSecret('activism'); goals.achieve('motivation 1'); }),
     new Badge("motivation 2", "Working with sense", "Motivation upgraded to level 30.",
         function () { return (Civilization.works.motivation.level >= 30); }, function () {}),
     new Badge("motivation 3", "Target of life", "Motivation upgraded to level 45.",
@@ -4906,28 +4964,54 @@ badges.db = [
         function () { return (Player.departments.docs.level >= 60); }, function () {}),
 
 
-    new Badge("volunteers 1", "Group", "Founded 15 volunteers."),
-    new Badge("volunteers 2", "Company", "Founded 30 volunteers."),
-    new Badge("volunteers 3", "Community", "Founded 45 volunteers."),
-    new Badge("volunteers 4", "Organization", "Founded 60 volunteers."),
-
-    new Badge("learn 1", "", "You learn how to learning."),
-       // function () { return (Gatherer.events.increase_skill < 15 && Gatherer.events.increase_skill + 1 >= 15)}),
-    new Badge("learn 2", "", "You learn how to learning right."),
-    new Badge("learn 3", "", "You learn how to learning fast."),
-    new Badge("learn 4", "", "You learn how to learning things you needed."),
-
+    new Badge("volunteers 1", "Group", "Founded 15 volunteers.",
+        function () { return (Player.volunteers_memory >= 15); }, function () { Player.revealSecret('teamwork'); goals.achieve('volunteers 1'); Goal.displayed_goals_count++; }),
+    new Badge("volunteers 2", "Company", "Founded 30 volunteers.",
+        function () { return (Player.volunteers_memory >= 30); }, function () { Player.revealSecret('departments'); goals.achieve('volunteers 2'); }),
+    new Badge("volunteers 3", "Community", "Founded 45 volunteers.",
+        function () { return (Player.volunteers_memory >= 45); }, function () { Player.revealSecret('motivation'); goals.achieve('volunteers 3'); }),
+    new Badge("volunteers 4", "Organization", "Founded 60 volunteers.",
+        function () { return (Player.volunteers_memory >= 60); }, function () { Goal.displayed_goals_count++; }),
 
 
     new Badge("share 1", "Ready to learn", "You shared your knowledge 15 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 15); }, function () { Player.revealSecret('skills'); Player.revealSecret('self_study'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 15); }, function () { Player.revealSecret('skills'); Player.revealSecret('self_study'); goals.achieve('share 1'); }),
     new Badge("share 2", "Ready to read", "You shared your knowledge 30 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 30); }, function () { Player.revealSecret('books'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 30); }, function () { Player.revealSecret('books'); goals.achieve('share 2'); }),
     new Badge("share 3", "Ready to work", "You shared your knowledge 45 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 45); }, function () { Player.revealSecret('work'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 45); }, function () { Player.revealSecret('work'); goals.achieve('share 3'); }),
     new Badge("share 4", "Ready to lead", "You shared your knowledge 60 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 60); }, function () { Player.revealSecret('pet_project'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 60); }, function () { Player.revealSecret('pet_project'); goals.achieve('share 4'); }),
 
+
+    new Badge("hold_events 1", "", "You was hold 15 events.",
+        function () { return (Gatherer.events.hold_events >= 15); }, function () { Player.revealSecret('cancel_event'); goals.achieve('hold_events 1'); }),
+    new Badge("hold_events 2", "", "You was hold 30 events.",
+        function () { return (Gatherer.events.hold_events >= 30); }, function () { Player.revealSecret('invent'); goals.achieve('hold_events 2');  }),
+    new Badge("hold_events 3", "", "You was hold 45 events.",
+        function () { return (Gatherer.events.hold_events >= 45); }, function () {}),
+    new Badge("hold_events 4", "", "You was hold 60 events.",
+        function () { return (Gatherer.events.hold_events >= 60); }, function () {}),
+
+
+    new Badge("accepted_lectures 1", "A new brunch", "You accepted 15 lectures.",
+        function () { return (lectures.db.length >= 60 + 15); }, function () { Player.revealSecret('add_time'); goals.achieve('accepted_lectures 1'); }),
+    new Badge("accepted_lectures 2", "Stable brunch", "You accepted 30 lectures.",
+        function () { return (lectures.db.length >= 60 + 30); }, function () { Player.revealSecret('change_theme'); goals.achieve('accepted_lectures 2');  }),
+    new Badge("accepted_lectures 3", "Old brunch", "You accepted 45 lectures.",
+        function () { return (lectures.db.length >= 60 + 45); }, function () {}),
+    new Badge("accepted_lectures 4", "Main brunch", "You accepted 60 lectures.",
+        function () { return (lectures.db.length >= 60 + 60); }, function () {}),
+
+
+    new Badge("learn 1", "", "You learn how to learning.",
+        function () { return (Gatherer.events.increase_skill >= 15); }),
+    new Badge("learn 2", "", "You learn how to learning right.",
+        function () { return (Gatherer.events.increase_skill >= 30); }),
+    new Badge("learn 3", "", "You learn how to learning fast.",
+        function () { return (Gatherer.events.increase_skill >= 45); }),
+    new Badge("learn 4", "", "You learn how to learning things you needed.",
+        function () { return (Gatherer.events.increase_skill >= 60); }),
 
     new Badge("selfStudy 1", "", "15 Self Studies"),
     new Badge("selfStudy 2", "", "30 Self Studies"),
@@ -4959,25 +5043,45 @@ badges.db = [
 
 
 
-    new Badge("writing 1", "", "Mom thinks that you write as Dostoevsky."),
-    new Badge("writing 2", "", "You think that you write as Dostoevsky."),
-    new Badge("writing 3", "", "Everyone thinks that you write as Dostoevsky."),
-    new Badge("writing 4", "", "Dostoevsky thinks you write as Dostoevsky."),
+    new Badge("writing 1", "", "Mom thinks that you write as Dostoevsky.",
+        function () { return Player[writing] >= 15; }, function () { badges.achieve(writing + " 1"); }),
+    new Badge("writing 2", "", "You think that you write as Dostoevsky.",
+        function () { return Player[writing] >= 30; }, function () { badges.achieve(writing + " 2"); 
+            Player.addSupervision(skills_departments[writing]); }),
+    new Badge("writing 3", "", "Everyone thinks that you write as Dostoevsky.",
+        function () { return Player[writing] >= 45; }, function () { badges.achieve(writing + " 3"); }),
+    new Badge("writing 4", "", "Dostoevsky thinks you write as Dostoevsky.",
+        function () { return Player[writing] >= 60; }, function () { badges.achieve(writing + " 4"); }),
 
-    new Badge("drawing 1", "", "You can draw a cat."),
-    new Badge("drawing 2", "", "You can draw a man."),
-    new Badge("drawing 3", "", "You can draw site."),
-    new Badge("drawing 4", "", "You do can draw a cat."),
+    new Badge("drawing 1", "", "You can draw a cat.",
+        function () { return Player[drawing] >= 15; }, function () { badges.achieve(drawing + " 1"); }),
+    new Badge("drawing 2", "", "You can draw a man.",
+        function () { return Player[drawing] >= 30; }, function () { badges.achieve(drawing + " 2");
+        Player.addSupervision(skills_departments[drawing]); }),
+    new Badge("drawing 3", "", "You can draw site.",
+        function () { return Player[drawing] >= 45; }, function () { badges.achieve(drawing + " 3"); }),
+    new Badge("drawing 4", "", "You do can draw a cat.",
+        function () { return Player[drawing] >= 60; }, function () { badges.achieve(drawing + " 4"); }),
 
-    new Badge("programming 1", "", "You feel the difference between a code and a broken encoding."),
-    new Badge("programming 2", "", "You feel the difference between a Class and an Object."),
-    new Badge("programming 3", "", "You feel the difference between Mixins and Traits."),
-    new Badge("programming 4", "", "You feel the difference between the Wrapper, the Proxy, the Facade and the Composite."),
+    new Badge("programming 1", "", "You feel the difference between a code and a broken encoding.",
+        function () { return Player[programming] >= 15; }, function () { badges.achieve(programming + " 1"); }),
+    new Badge("programming 2", "", "You feel the difference between a Class and an Object.",
+        function () { return Player[programming] >= 30; }, function () { badges.achieve(programming + " 2"); 
+        Player.addSupervision(skills_departments[programming]); }),
+    new Badge("programming 3", "", "You feel the difference between Mixins and Traits.",
+        function () { return Player[programming] >= 45; }, function () { badges.achieve(programming + " 3"); }),
+    new Badge("programming 4", "", "You feel the difference between the Wrapper, the Proxy, the Facade and the Composite.",
+        function () { return Player[programming] >= 60; }, function () { badges.achieve(programming + " 4"); }),
 
-    new Badge("management 1", "", "You think that people do not listen to you."),
-    new Badge("management 2", "", "You think that people are listening to you."),
-    new Badge("management 3", "", "You know that people are listening to you."),
-    new Badge("management 4", "", "You know that people do not listen to you."),
+    new Badge("management 1", "", "You think that people do not listen to you.",
+        function () { return Player[management] >= 15; }, function () { badges.achieve(management + " 1"); }),
+    new Badge("management 2", "", "You think that people are listening to you.",
+        function () { return Player[management] >= 30; }, function () { badges.achieve(management + " 2"); 
+        Player.addSupervision(skills_departments[management]); }),
+    new Badge("management 3", "", "You know that people are listening to you.",
+        function () { return Player[management] >= 45; }, function () { badges.achieve(management + " 3"); }),
+    new Badge("management 4", "", "You know that people do not listen to you.",
+        function () { return Player[management] >= 60; }, function () { badges.achieve(management + " 4"); }),
 
 
     new Badge("act 1", "", "You act 15 times."),
@@ -5049,6 +5153,68 @@ badges.getHTML = function () {
     });
     html += `</div></div>`;
     return html;
+};
+
+function Goal(name, text) {
+    this.name = name;
+    this.text = text;
+    this.reached = 0;
+}
+
+Goal.displayed_goals_count = 1;
+
+Goal.getHTML = function () {
+    var displayed_goals = [];
+
+    for (var key in goals.db) {
+        if (goals.db[key].reached === 0) {
+            displayed_goals.push(`<span class="flex-element">${goals.db[key].text}</span>`);
+            if (displayed_goals.length >= Goal.displayed_goals_count) break;
+        }
+    }
+
+    var html = displayed_goals.join('');
+    return html;
+};
+
+var goals = {};
+
+goals.db = [
+    new Goal("culture", "First of all try to find some friends"),
+    new Goal("volunteers 1", "For growing you must found 15 volunteers."),
+    new Goal("communication 1", "Upgrade communication to level 15 for unlock attentiveness."),
+    new Goal("popularization 1", "Upgrade popularization to level 15 for unlock education."),
+    new Goal("volunteers 2", "For growing you must found 30 volunteers."),
+
+    new Goal("resources 1", "Collect some resources for unlock objectives"),
+    new Goal("resources 2", "Collect many resources for unlock events"),
+
+    new Goal("teamwork 1", "Upgrade teamwork to level 15 for able to upgrade departments."),
+    new Goal("share 1", "Share you knowledge 15 times for able to increase your skill."),
+    new Goal("volunteers 3", "For growing you must found 45 volunteers."),
+    new Goal("motivation 1", "Upgrade motivation to level 15 for unlock activism."),
+    new Goal("accepted_lectures 1", "Accept 15 lectures for able to add additional time for lecturer."),
+    new Goal("hold_events 1", "Hold 15 events for able to cancel event."),
+    new Goal("share 2", "Share you knowledge 30 times for able to read books."),
+    new Goal("volunteers 4", "For growing you must found 60 volunteers."),
+
+    new Goal("resources 3", "Collect a lot of resources for unlock resource sharing"),
+
+    new Goal("share 3", "Share you knowledge 45 times for able to do job."),
+
+    new Goal("accepted_lectures 2", "Accept 30 lectures for able to change lecture title."),
+    new Goal("hold_events 2", "Hold 30 events for able to invent new event."),
+
+    new Goal("share 4", "Share you knowledge 60 times for able to start your own project."),
+];
+
+
+goals.achieve = function (name) {
+    goals.db.filter(function (val) {
+        return (val.name == name) ? 1 : 0;
+    }).forEach(function (value, id, array) {
+        array[0].reached = 1;
+    });
 };
 
 function Startup(name, label, size, text, cost, reward) {
@@ -5236,43 +5402,54 @@ startups.found = function (skill_name) {
 }; */
 
 
-function Objective(name, label, text, requires, cost) {
+function Objective(name, label, text, requires, cost, init_code) {
     this.name = name;
     this.label = label;
     this.text = text;
     this.requires = requires;
     this.cost = cost;
-    this.reached = 0;
+    this.init_code = init_code;
 
+    this.reached = 0;
     this.is_reached = is_reached;
 }
 
 var objectives = {};
 objectives.db = [
+
+    new Objective('computer', 'Computer', 'A useful tool for work and entertainment.', [], {likes: 15000, design: 1500, money: 150, ideas: 15}),
+
+    new Objective('dungeon', 'Dungeon', 'The game.', ['computer'], {likes: 20000}, function () { Player.revealSecret('dungeon'); }),
+    new Objective('space', 'Space', 'The game.', ['computer'], {design: 2000}, function () { Player.revealSecret('space'); }),
+    new Objective('rally', 'Rally', 'The game.', ['computer'], {money: 200}, function () { Player.revealSecret('rally'); }),
+    new Objective('castle', 'Enlightener', 'The game about education and enlighting.', ['computer'], {ideas: 20}, function () { Player.revealSecret('castle'); }),
+
+    /*
     new Objective('sold_for_knowledge_1', 'Perseverance', 'Description', ['learn 1'], {knowledge: 10}),
     new Objective('sold_for_knowledge_2', 'Discipline', 'Description', ['learn 2', 'sold_for_knowledge_1'], {knowledge: 20}),
     new Objective('sold_for_knowledge_3', 'Motivation', 'Description', ['learn 3', 'sold_for_knowledge_2'], {knowledge: 30}),
     new Objective('sold_for_knowledge_4', 'Purposefulness', 'Description', ['learn 4', 'sold_for_knowledge_3'], {knowledge: 40}),
+    */
 
-    new Objective('sold_for_likes_1', 'Social network group', 'Allows to make groups in the VC and FB', ['likes 1'], {likes: 1000}),
-    new Objective('sold_for_likes_2', 'Instagram', 'Upload photos from event', ['sold_for_likes_1'], {likes: 10000}),
-    new Objective('sold_for_likes_3', 'Youtube channel', 'Upload lectures video', ['sold_for_likes_2'], {likes: 100000}),
-    new Objective('sold_for_likes_4', 'Site', 'Let all information about you knowledge be available in one place', ['sold_for_likes_3'], {likes: 10000000}),
+    new Objective('sold_for_likes_1', 'Social network group. Storages for likes', 'Allows to make groups in the VC and FB', ['likes 1'], {likes: 1000}),
+    new Objective('sold_for_likes_2', 'Instagram. Storages for likes', 'Upload photos from event', ['sold_for_likes_1'], {likes: 10000}),
+    new Objective('sold_for_likes_3', 'Youtube channel. Storages for likes', 'Upload lectures video', ['sold_for_likes_2'], {likes: 100000}),
+    new Objective('sold_for_likes_4', 'Site. Storages for likes', 'Let all information about you knowledge be available in one place', ['sold_for_likes_3'], {likes: 10000000}),
 
-    new Objective('sold_for_design_1', 'Business cards', 'The face of your company', ['design 1'], {design: 100}),
-    new Objective('sold_for_design_2', 'Posters', 'A more quality poster is leads to greater attendance', ['sold_for_design_1'], {design: 1000}),
-    new Objective('sold_for_design_3', 'Booklets', 'Show an ingenious engineering solution for all', ['sold_for_design_2'], {design: 10000}),
-    new Objective('sold_for_design_4', 'Handbooks', 'Let everyone see how you are organized', ['sold_for_design_3'], {design: 100000}),
+    new Objective('sold_for_design_1', 'Business cards. Storages for design', 'The face of your company', ['design 1'], {design: 100}),
+    new Objective('sold_for_design_2', 'Posters. Storages for design', 'A more quality poster is leads to greater attendance', ['sold_for_design_1'], {design: 1000}),
+    new Objective('sold_for_design_3', 'Booklets. Storages for design', 'Show an ingenious engineering solution for all', ['sold_for_design_2'], {design: 10000}),
+    new Objective('sold_for_design_4', 'Handbooks. Storages for design', 'Let everyone see how you are organized', ['sold_for_design_3'], {design: 100000}),
     
-    new Objective('sold_for_money_1', 'Purse', 'You spend a pocket money on a project', ['money 1'], {money: 10}),
-    new Objective('sold_for_money_2', 'Safe', 'Several people share their money for a project', ['sold_for_money_1'], {money: 100}),
-    new Objective('sold_for_money_3', 'Bank account', 'You have a few benefactors', ['sold_for_money_2'], {money: 1000}),
-    new Objective('sold_for_money_4', 'Charitable Foundation', 'You\'re so big company that now you have your own fund', ['sold_for_money_3'], {money: 10000}),
+    new Objective('sold_for_money_1', 'Purse. Storages for money', 'You spend a pocket money on a project', ['money 1'], {money: 10}),
+    new Objective('sold_for_money_2', 'Safe. Storages for money', 'Several people share their money for a project', ['sold_for_money_1'], {money: 100}),
+    new Objective('sold_for_money_3', 'Bank account. Storages for money', 'You have a few benefactors', ['sold_for_money_2'], {money: 1000}),
+    new Objective('sold_for_money_4', 'Charitable Foundation. Storages for money', 'You\'re so big company that now you have your own fund', ['sold_for_money_3'], {money: 10000}),
 
-    new Objective('sold_for_ideas_1', 'Repetition', 'Importantly! Do not forget apples', ['ideas 1'], {ideas: 1}),
-    new Objective('sold_for_ideas_2', 'Astro-event', 'Ideas knowledge not fall down from the sky', ['sold_for_ideas_1'], {ideas: 10}),
-    new Objective('sold_for_ideas_3', 'Party', 'The best ideas are born during leisure', ['sold_for_ideas_2'], {ideas: 100}),
-    new Objective('sold_for_ideas_4', 'Festival', 'You knowledge be very experienced if you don\'t die', ['sold_for_ideas_3'], {ideas: 1000}),
+    new Objective('sold_for_ideas_1', 'Repetition. Storages for ideas', 'Importantly! Do not forget apples', ['ideas 1'], {ideas: 1}),
+    new Objective('sold_for_ideas_2', 'Astro-event. Storages for ideas', 'Ideas knowledge not fall down from the sky', ['sold_for_ideas_1'], {ideas: 10}),
+    new Objective('sold_for_ideas_3', 'Party. Storages for ideas', 'The best ideas are born during leisure', ['sold_for_ideas_2'], {ideas: 100}),
+    new Objective('sold_for_ideas_4', 'Festival. Storages for ideas', 'You will be very experienced if you don\'t die', ['sold_for_ideas_3'], {ideas: 1000}),
 
 ];
 
@@ -5286,6 +5463,9 @@ objectives.buy = function (name) {
             message("Objective reached: " + objective.name);
             array[0].reached = 1;
             Player.revealSecret(objective.name);
+            if (typeof objective.init_code === 'function') {
+                objective.init_code();
+            }
         }
     });
 };
@@ -5310,7 +5490,7 @@ objectives.getHTML = function () {
                     html += `${objective.label}. ${objective.text} [`;
             
                 for (var key in objective.cost) {
-                   html += `${key}: ${objective.cost[key]}`;
+                   html += `${key}: ${objective.cost[key]} `;
                 }
                 html += `] 
             </span>
@@ -5527,6 +5707,7 @@ Event.holdEvent = function(event_id) {
         });
 
         events.db.splice(event_id, 1);
+        Gatherer.holdEvent();
         this.invent();
         draw_all();
     }
@@ -5710,7 +5891,7 @@ Lecture.addTime = function(lecture_id) {
 
  Lecture.tick = function () {
  	lectures.offered.forEach(function (lecture, id) {
- 		if (lectures.offered[id].patience > 0) lectures.offered[id].patience--;
+ 		if (lectures.offered[id].patience > 1) lectures.offered[id].patience--;
  		else {
  			message("Lecturer has disappointed and gone");
  			lectures.offered.splice(id, 1);
@@ -5749,8 +5930,8 @@ Lecture.addTime = function(lecture_id) {
         html += `
         <div class="offered_lecture_element">
         	<button onclick = "Lecture.accept_lecture(${id});">Accept</button>
-       		<button onclick = "Lecture.skip_lecture(${id});">Change Theme</button>
-       		<button onclick = "Lecture.addTime(${id});">Add time</button>
+       		${(Player.found_secrets.indexOf('add_time') !== -1) ? `<button onclick = "Lecture.addTime(${id});">Add time</button>` : ''}
+       		${(Player.found_secrets.indexOf('change_theme') !== -1) ? `<button onclick = "Lecture.skip_lecture(${id});">Change Theme</button>` : ''}
         	<span class="offered_lecture_name">
         		${lecture.lecturer_name}. ${lecture.name} (need ${cost} ${name})
         		${timer}
@@ -5775,7 +5956,7 @@ lectures.db = [
     new Lecture("Александр Гапак", "15 минут про Искусственный Интеллект","Что такое Искусственный Интеллект, каких он бывает видов, как устроен внутри? Будут ли у него чувства и эмоции, захватит ли он человечество или будет нам верным помощником?", "https://www.youtube.com/watch?v=JW78WYT8HU4"),
     new Lecture("Александр Гапак", "15 минут про корабли EVE Online", "Благодаря усилиям инженеров четырех рас и шести независимых фракций, верфи Нового Эдема выпускают более 300 различных корпусов кораблей, разбитых на более чем 30 разных классов. В своей лекции я расскажу, какие корабли вы встретите, выйдя из дока.", "https://www.youtube.com/watch?v=dO5gVvSiW30"),
     new Lecture("Таня Бушенева", "15 минут про ловушки психики", "Наша психика иногда поступает с нами очень подло и совсем не способствует нашему выживанию, успеху и счастью. Может, понимания, что мы иногда ведем себя не умнее, чем голуби, будет достаточно, чтобы выбраться из ловушки?","https://www.youtube.com/watch?v=Pru7mZz4W4E"),
-    new Lecture("Богдан Колчигин", "15 минут о теории хаоса", "Hазвание будоражит фантазию, но попытки близкого знакомства часто упираются в суровую математику и странную терминологию. Попробуем с безопасного расстояния разобраться, чем занимается теория хаоса и почему её не любят синоптики (но должны полюбить мы).", "https://www.youtube.com/watch?v=yyu-cKn25SI"),
+    new Lecture("Богдан Колчигин", "15 минут о теории хаоса", "Название будоражит фантазию, но попытки близкого знакомства часто упираются в суровую математику и странную терминологию. Попробуем с безопасного расстояния разобраться, чем занимается теория хаоса и почему её не любят синоптики (но должны полюбить мы).", "https://www.youtube.com/watch?v=yyu-cKn25SI"),
     new Lecture("Александр Гапак", "15 минут про 15х4", "15х4 — это сообщество молодых ученых и фанатов науки. Мы хотим, чтобы люди выступали и делились знаниями. Наша цель — создать крупное движение популяризато", "https://www.youtube.com/watch?v=MR4a1v8qVa4"),
     new Lecture("Александр Гапак", "15 минут о теории относительности", "Теория относительности - один из величайших прорывов физики, изменивший наше понимание вселенной. Вместе с тем, она изящна и доступна даже для детей. На множестве примеров я расскажу об искривлении времени при движении с околосветовой скоростью.", "https://www.youtube.com/watch?v=Ls9fKgdm18k"),
     new Lecture("Богдан Колчигин", "15 минут про самосознание", "Кто смотрит вашими глазами, озвучивает ваши мысли, слушает ваш внутренний диалог? Кто такой \"я\", есть ли у него своё мнение, где он находится и как он там оказался? На всё это у современной нейрофизиологии есть свой вариант ответа, и с ним стоит ознакомиться, потому что он касается вас самым непосредственным образом", "https://www.youtube.com/watch?v=oMqOEllecYg"),
@@ -5810,7 +5991,7 @@ lectures.db = [
     new Lecture("Александра Бойко", "15 минут о вакцинации", "Я расскажу всем сомневающимся о том, почему делать прививки дешевле, чем лечиться у меня и не только у меня, как вакцинированные соседи защищают непривитого ребенка и о том, что пробу Манту мочить вполне можно.", "https://www.youtube.com/watch?v=RS3Kb5ucUvs"),
     new Lecture("Таня Бушенева", "15 минут о радиации", "Радиация всегда с нами, но мы не видим и не ощущаем ее в несмертельных дозах. Я хочу поговорить о том, как она устроена, что она с нами делает и как мы с ней все-таки уживаемся.", "https://www.youtube.com/watch?v=SG704p9JxZc"),
     new Lecture("Борис Мороз", "15 минут про зарождение хираганы", "Позаимствовав иероглифы у Китая, Япония едва не потеряла свою самобытность, растворившись в языке и культуре Поднебесной. Однако свой собственный алфавит смог не только зародиться, но и выжить в непростой борьбе. Решающую роль в этом сыграла судьба лишь одного человека.", "https://www.youtube.com/watch?v=NKRDz_CNG1s"),
-    new Lecture("Евгений Звяги", "15 минут про микровол", "Микроволновое излучение зарекомендовало себя в быту, в промышленности и в науке. Я расскажу, почему нельзя класть ложку в воду в СВЧ-печи, почему в ней искрится фольга и как микроволны помогают в создании лекарств.", "https://www.youtube.com/watch?v=TXUBAHffKyo"),
+    new Lecture("Евгений Звягин", "15 минут про микроволны", "Микроволновое излучение зарекомендовало себя в быту, в промышленности и в науке. Я расскажу, почему нельзя класть ложку в воду в СВЧ-печи, почему в ней искрится фольга и как микроволны помогают в создании лекарств.", "https://www.youtube.com/watch?v=TXUBAHffKyo"),
     new Lecture("Александр Гапак", "15 минут про Искусственный Интеллект. Обсуждение.", "Что такое Искусственный Интеллект, каких он бывает видов, как устроен внутри? Будут ли у него чувства и эмоции, захватит ли он человечество или будет нам верным помощником? Узнай все об ИИ в этой лекции.", "https://www.youtube.com/watch?v=Pkx8xwcpG1U"),
     new Lecture("Максим Меркулов", "15 минут про нейромедиаторы", "Мозг имеет множество скрытых механизмов работы, многие из которых совершенно иначе мы видим изнутри. Я попробую рассказать о некоторых из них.", "https://www.youtube.com/watch?v=g3qRxZZc-C4"),
     new Lecture("Дарья Андреева", "15 минут о вакцинации", "О вакцинации сейчас ведется много споров, однако далеко не все, что говорят о прививках, имеет отношение к действительности. Я расскажу о том, как работают вакцины, о возможных рисках и о том, как наш выбор за или против вакцинации влияет на общество в целом.", "https://www.youtube.com/watch?v=ngpoOqUxW6w"),
@@ -5835,49 +6016,130 @@ lectures.db = [
 
 
 
-LogPanel = {
-	day: 0,
-	messages: [],
-	clear: function(){this.messages = []},
-	hide: function(){
-		$('#main_content').toggleClass('main_content80 main_content100');
-	}
-};
 
-function LogMessage(filter, text) {
-	this.filter = filter;
-	this.text = text;
-};
-
-LogPanel.filters = ["Badge", "Not enough", "Paid", "Gained", "Reward"];
-
-var check_html ="";
-LogPanel.filters.forEach(function (filter) {
-	check_html += '<input type="checkbox" name="log_filter" checked="checked" value="'+filter+'">'+filter;
+var LogPanelSingleFilter = React.createClass({displayName: "LogPanelSingleFilter",
+    getInitialState: function() {
+        return {checked: true}
+    },
+    onChange: function() {
+        var checked = !this.state.checked;
+        this.props.onChange(this.props.name, checked);
+        this.setState({checked: checked});
+    },
+    render: function(){
+        return(
+            React.createElement("span", null, 
+                React.createElement("input", {type: "checkbox", checked: this.state.checked, onChange: this.onChange}), 
+                this.props.name
+            )
+        )
+    }
 });
 
-document.addEventListener("DOMContentLoaded", function() {
-	document.getElementById("log_panel_filters").insertAdjacentHTML('beforeend', check_html);
+var SideBarReact = React.createClass({displayName: "SideBarReact",
+    getInitialState: function() {
+        // TODO: fix next block
+        var self = this;
+        window["LogSetTick"] = function(day) {
+            self.setState({day: day});
+        }
+
+        return {
+            open: true,
+            filters: ["Badge", "Not enough", "Paid", "Gained", "Reward", "Max", "Lecturer"],
+            day: 0
+        };
+    },
+    onFilter: function(filter, state) {
+        this.refs.log.filter(filter, !state);
+    },
+    onCollapse: function() {
+        var open = !this.state.open;
+        this.setState({open: open})
+        // TODO: fix next line
+        $('#main_content').toggleClass('main_content80 main_content100');
+    },
+    clear: function() {
+        this.refs.log.clear();
+    },
+    render: function(){
+        var day = this.state.day;
+        var filters = this.state.filters;
+        return(
+            React.createElement("aside", {className: "sidebar"}, 
+                React.createElement("span", null, "Log Panel"), 
+                React.createElement("button", {onClick: this.clear}, "Clear Log"), 
+                React.createElement("button", {id: "log_panel_button", className: "collapsar", style: {top: '0px'}, onClick: this.onCollapse}, 
+                    this.state.open?'-':'+'
+                ), 
+                React.createElement("div", null, "Day: ", React.createElement("span", {id: "day_indicator"}, day)), 
+                React.createElement("hr", null), 
+                React.createElement(ReactBootstrap.Collapse, {in: this.state.open}, 
+                    React.createElement("div", null, 
+                        filters.map( function(name, i) {
+                            return React.createElement(LogPanelSingleFilter, {onChange: this.onFilter, key: i, name: name})
+                        }, this), 
+                        React.createElement("hr", null), 
+                        React.createElement(LogPanelContent, {ref: "log", id: "log_panel_collapse"})
+                    )
+                )
+            )
+        );
+    }
 });
 
-function FilterLogs(){
-	var check = document.getElementsByName("log_filter");
-	check.forEach(function(item){
-		if(item.checked==true){
-			LogPanel.messages.forEach(function(logMessage){
-				if(logMessage.text.includes(item.value)){
-					logMessage.filter = true;
-				}
-			});
-		}else{
-			LogPanel.messages.forEach(function(logMessage){
-				if(logMessage.text.includes(item.value)){
-					logMessage.filter = false;
-				}
-			});
-		}
-	});
-};
+var LogPanelContent = React.createClass({displayName: "LogPanelContent",
+    getInitialState: function(){
+        var self = this;
+        window["LogMessage"] = function(filter, text) {
+            self.addMesage({filter: filter, text: text});
+        }
+        return {
+            messages: [],
+            filter: {}
+        };
+    },
+    clear: function(){
+        this.setState({messages: []});
+    },
+    filter: function(text, hide) {
+        var filter = this.state.filter;
+        filter[text] = hide;
+        this.setState({filter: filter});
+    },
+    addMesage: function(message) {
+        var messages = this.state.messages;
+        messages.unshift(message);
+        this.setState({messages: messages});
+    },
+    render: function() {
+        var messages = this.state.messages;
+        var filter = this.state.filter;
+        var avoid = [];
+        for(var key in filter) {
+            if(filter[key]) avoid.push(key);
+        }
+        function shouldShow(message) {
+            return !avoid.some(function(f) {
+                return message.text.includes(f)
+            })
+        }
+        return (
+            React.createElement("ul", null, 
+                messages.map(function(message, i){
+                    if(shouldShow(message)) {
+                        return (
+                            React.createElement("li", {key: i}, React.createElement("div", {className: "log_message_element"}, 
+                                React.createElement("span", {className: "log_message_name"}, " ", message.text, " ")
+                            ))
+                        );
+                    }
+                }, this)
+            )
+        )
+    }
+});
+
 /**
  * Created by Стас on 09.08.2016.
  */
@@ -5930,7 +6192,6 @@ var TimeReact = React.createClass({displayName: "TimeReact",
     },
 
     tick: function () {
-
         var ticks = this.state.ticks + 1;
         this.setState({
             ticks: ticks,
@@ -5938,6 +6199,7 @@ var TimeReact = React.createClass({displayName: "TimeReact",
             year:  Math.floor(ticks / 365),
             season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 365) / (365 / 4))],
         })
+        return ticks;
     },
 
     render: function() {
@@ -5953,6 +6215,9 @@ var TimeReact = React.createClass({displayName: "TimeReact",
 });
 
 
+// class Main should generate all page at the level of #main_container
+// It should tick, set number of ticks/days/season to refs that need that
+
 
 var Main = React.createClass({displayName: "Main",
 
@@ -5961,7 +6226,7 @@ var Main = React.createClass({displayName: "Main",
     },
 
     tick: function() {
-        this.refs.Time.tick();
+        var ticks = this.refs.Time.tick();
         Player.tick();
         Gatherer.tick();
         Badge.tick();
@@ -5972,6 +6237,9 @@ var Main = React.createClass({displayName: "Main",
         Castle.tick();
         Lecture.tick();
         Startup.tick();
+
+        // remove it later
+        (window.LogSetTick && window.LogSetTick(ticks));
 
         message("A new day.");
 
@@ -5994,14 +6262,17 @@ window.onload = function() {
 
     ReactDOM.render(
         React.createElement(Main, null),
-        //document.getElementById('main_content') // Uncomment when done
+        //document.getElementById('main_container') // Uncomment when done
         document.getElementById('time_container')
+    );
+    ReactDOM.render(
+        React.createElement(SideBarReact, null),
+        document.getElementById('log_container')
     );
 
     Player.revealSecret('seek');
     Player.revealSecret('popularization');
     Player.revealSecret('communication');
-    Player.revealSecret('attentiveness');
     //Player.revealSecret('motivation');
     events.db.push(Event.generator());
 
