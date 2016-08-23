@@ -2379,25 +2379,35 @@ if (typeof jQuery === 'undefined') {
 
 }(jQuery);
 
+/*
+var Billet = React.createClass({
+    constructor: function(name, base_cost_array, cost_grow_rate, text){
+        this.state = {
+            name: 
+        }
+    },
 
-/*var Billet = React.createClass({
-    constructor: function(){},
+    upgrade: function() {},
+
+    getInitialState: function() {
+        return {
+            name: '',
+            day: 0,
+            year: 0,
+            season: 'winter'
+        };
+    },
     
     render: function() {
-        var code = '#1'
         return (
-            <div className='title row3 dwg-no'>
-                <TitleElement text={code} />
+            <div className="flex-element flex-container-column ${secret_class}" id="${key}_container">
+                <div className="flex-element flex-container-row ">
+                ${key.capitalizeFirstLetter()}
+                <div class="${secret_class}">: <span id="${key}level">${this.level}</span></div>
+                </div>
+                <div class="flex-element"><button onclick="${address}('${key}');">Up: ${price}</button></div>
+                <div class="flex-element">${this.text}</div>
             </div>
-
-<div className="flex-element flex-container-column ${secret_class}" id="${key}_container">
-    <div className="flex-element flex-container-row ">
-    ${key.capitalizeFirstLetter()}
-    <div class="${secret_class}">: <span id="${key}level">${this.level}</span></div>
-    </div>
-    <div class="flex-element"><button onclick="${address}('${key}');">Up: ${price}</button></div>
-    <div class="flex-element">${this.text}</div>
-</div>
         )
     }
 })
@@ -5906,9 +5916,6 @@ document.onmouseout = function(e) {
 };
 
 var Time = {
-    ticks: 0,
-    day: 0,
-    ear: 0,
     season: 'winter'
 };
 
@@ -5917,7 +5924,7 @@ var TimeReact = React.createClass({displayName: "TimeReact",
         return {
             ticks: 0,
             day: 0,
-            ear: 0,
+            year: 0,
             season: 'winter'
         };
     },
@@ -5927,13 +5934,34 @@ var TimeReact = React.createClass({displayName: "TimeReact",
         var ticks = this.state.ticks + 1;
         this.setState({
             ticks: ticks,
-            day:  ticks % 356,
-            ear:  Math.floor(ticks / 356),
-            season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 356) / (356 / 4))],
+            day:  ticks % 365,
+            year:  Math.floor(ticks / 365),
+            season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 365) / (365 / 4))],
         })
+    },
 
-        message("A new day.");
+    render: function() {
+        Time.season = this.state.season;
+        return (
+            React.createElement("div", null, 
+                React.createElement("span", null, " Year: "), " ", React.createElement("span", null, " ", this.state.year, " "), 
+                React.createElement("span", null, " Day: "), " ", React.createElement("span", null, " ", this.state.day, " "), 
+                React.createElement("span", null, " Season: "), " ", React.createElement("span", null, " ", this.state.season, " ")
+            )
+        );
+    }
+});
 
+
+
+var Main = React.createClass({displayName: "Main",
+
+    componentDidMount: function() {
+        setInterval(this.tick, 1000, this); 
+    },
+
+    tick: function() {
+        this.refs.Time.tick();
         Player.tick();
         Gatherer.tick();
         Badge.tick();
@@ -5945,39 +5973,31 @@ var TimeReact = React.createClass({displayName: "TimeReact",
         Lecture.tick();
         Startup.tick();
 
+        message("A new day.");
+
         localStorage.setItem("Player", JSON.stringify(Player));
         localStorage.setItem("lectures.db", JSON.stringify(lectures.db));
-
         draw_all();
     },
 
-    componentDidMount: function() {
-        setInterval(this.tick, 1000, this); 
-    },
-
     render: function() {
-        Time.season = this.state.season;
         return (
             React.createElement("div", null, 
-                React.createElement("span", null, " Ear: ", this.state.ear, " "), 
-                React.createElement("span", null, " Day: ", this.state.day, " "), 
-                React.createElement("span", null, " Season: ", this.state.season, " ")
+                React.createElement(TimeReact, {ref: "Time"})
             )
-        );
+        )
     }
-});
-
-ReactDOM.render(
-  React.createElement(TimeReact, null),
-  document.getElementById('time_container')
-);
-
+})
 
 window.onload = function() {
     draw_all();
 
-    // will start ticking after mounting
-    //var t = setInterval(Time.tick, 1000);
+    ReactDOM.render(
+        React.createElement(Main, null),
+        //document.getElementById('main_content') // Uncomment when done
+        document.getElementById('time_container')
+    );
+
     Player.revealSecret('seek');
     Player.revealSecret('popularization');
     Player.revealSecret('communication');

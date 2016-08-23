@@ -41,7 +41,7 @@ module.exports = {
 		'app/LogPanel.js',
 		'app/tips.js',
 		'app/time.jsx',
-		'app/main.js'
+		'app/main.jsx'
 	],
 	styles: ['css/*.css'],
 }

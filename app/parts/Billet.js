@@ -1,4 +1,36 @@
+/*
+var Billet = React.createClass({
+    constructor: function(name, base_cost_array, cost_grow_rate, text){
+        this.state = {
+            name: 
+        }
+    },
 
+    upgrade: function() {},
+
+    getInitialState: function() {
+        return {
+            name: '',
+            day: 0,
+            year: 0,
+            season: 'winter'
+        };
+    },
+    
+    render: function() {
+        return (
+            <div className="flex-element flex-container-column ${secret_class}" id="${key}_container">
+                <div className="flex-element flex-container-row ">
+                ${key.capitalizeFirstLetter()}
+                <div class="${secret_class}">: <span id="${key}level">${this.level}</span></div>
+                </div>
+                <div class="flex-element"><button onclick="${address}('${key}');">Up: ${price}</button></div>
+                <div class="flex-element">${this.text}</div>
+            </div>
+        )
+    }
+})
+*/
 
 function Billet(name, base_cost_array, cost_grow_rate , text) {
     this.name = name;
