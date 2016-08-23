@@ -2,7 +2,8 @@
 window.onload = function() {
     draw_all();
 
-    var t = setInterval(Time.tick, 1000);
+    // will start ticking after mounting
+    //var t = setInterval(Time.tick, 1000);
     Player.revealSecret('seek');
     Player.revealSecret('popularization');
     Player.revealSecret('communication');

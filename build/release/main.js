@@ -2380,6 +2380,29 @@ if (typeof jQuery === 'undefined') {
 }(jQuery);
 
 
+/*var Billet = React.createClass({
+    constructor: function(){},
+    
+    render: function() {
+        var code = '#1'
+        return (
+            <div className='title row3 dwg-no'>
+                <TitleElement text={code} />
+            </div>
+
+<div className="flex-element flex-container-column ${secret_class}" id="${key}_container">
+    <div className="flex-element flex-container-row ">
+    ${key.capitalizeFirstLetter()}
+    <div class="${secret_class}">: <span id="${key}level">${this.level}</span></div>
+    </div>
+    <div class="flex-element"><button onclick="${address}('${key}');">Up: ${price}</button></div>
+    <div class="flex-element">${this.text}</div>
+</div>
+        )
+    }
+})
+*/
+
 function Billet(name, base_cost_array, cost_grow_rate , text) {
     this.name = name;
     this.base_cost_array = base_cost_array;
@@ -2665,7 +2688,7 @@ function draw_all() {
     }
 
 
-    w("time_container", Time.getHTML());
+    //w("time_container", Time.getHTML());
 
     w("enthusiasm_indicator", Player.enthusiasm.toFixed(2));
 
@@ -5881,6 +5904,7 @@ document.onmouseout = function(e) {
  showingTooltip = null;
  }
 };
+
 var Time = {
     ticks: 0,
     day: 0,
@@ -5888,49 +5912,72 @@ var Time = {
     season: 'winter'
 };
 
-Time.tick = function () {
-    Time.ticks++;
-    Time.day = Time.ticks % 356;
-    Time.ear = Math.floor(Time.ticks / 356);
-    Time.season = ['winter', 'spring', 'summer', 'autumn'][Math.floor((Time.ticks % 356) / (356 / 4))];
+var TimeReact = React.createClass({displayName: "TimeReact",
+    getInitialState: function() {
+        return {
+            ticks: 0,
+            day: 0,
+            ear: 0,
+            season: 'winter'
+        };
+    },
 
-    message("A new day.");
+    tick: function () {
 
-    Player.tick();
-    Gatherer.tick();
-    Badge.tick();
-    Civilization.tick();
-    Dungeon.tick();
-    Space.tick();
-    Rally.tick();
-    Castle.tick();
-    Lecture.tick();
-    Startup.tick();
+        var ticks = this.state.ticks + 1;
+        this.setState({
+            ticks: ticks,
+            day:  ticks % 356,
+            ear:  Math.floor(ticks / 356),
+            season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 356) / (356 / 4))],
+        })
 
-    localStorage.setItem("Player", JSON.stringify(Player));
-    localStorage.setItem("lectures.db", JSON.stringify(lectures.db));
+        message("A new day.");
 
-    draw_all();
-};
+        Player.tick();
+        Gatherer.tick();
+        Badge.tick();
+        Civilization.tick();
+        Dungeon.tick();
+        Space.tick();
+        Rally.tick();
+        Castle.tick();
+        Lecture.tick();
+        Startup.tick();
 
-Time.getHTML = function () {
-    var html = `
-<div>
-    <span> Ear: ${this.ear} </span>    
-    <span> Day: ${this.day} </span>    
-    <span> Season: ${this.season} </span>    
-</div>
-    `;
+        localStorage.setItem("Player", JSON.stringify(Player));
+        localStorage.setItem("lectures.db", JSON.stringify(lectures.db));
 
-    return html;
-};
+        draw_all();
+    },
 
+    componentDidMount: function() {
+        setInterval(this.tick, 1000, this); 
+    },
+
+    render: function() {
+        Time.season = this.state.season;
+        return (
+            React.createElement("div", null, 
+                React.createElement("span", null, " Ear: ", this.state.ear, " "), 
+                React.createElement("span", null, " Day: ", this.state.day, " "), 
+                React.createElement("span", null, " Season: ", this.state.season, " ")
+            )
+        );
+    }
+});
+
+ReactDOM.render(
+  React.createElement(TimeReact, null),
+  document.getElementById('time_container')
+);
 
 
 window.onload = function() {
     draw_all();
 
-    var t = setInterval(Time.tick, 1000);
+    // will start ticking after mounting
+    //var t = setInterval(Time.tick, 1000);
     Player.revealSecret('seek');
     Player.revealSecret('popularization');
     Player.revealSecret('communication');

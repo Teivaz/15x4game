@@ -3,8 +3,6 @@ module.exports = {
 	dest_release: 'build/release',
 	html: 'index.html',
 	xscripts: [
-		'app/*.js', 
-		'app/**/*.js', 
 		'app/*.jsx', 
 		'app/**/*.jsx'
 		],
@@ -42,7 +40,7 @@ module.exports = {
 		'app/lectures.db.js',
 		'app/LogPanel.js',
 		'app/tips.js',
-		'app/time.js',
+		'app/time.jsx',
 		'app/main.js'
 	],
 	styles: ['css/*.css'],

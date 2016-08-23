@@ -4,7 +4,7 @@ function draw_all() {
     }
 
 
-    w("time_container", Time.getHTML());
+    //w("time_container", Time.getHTML());
 
     w("enthusiasm_indicator", Player.enthusiasm.toFixed(2));
 
