@@ -28,6 +28,8 @@ module.exports = {
 		'app/skills.js',
 		'app/Badge.js',
 		'app/badges.db.js',
+		'app/Goal.js',
+		'app/goals.db.js',
 		'app/Startup.js',
 		'app/startups.db.js',
 		'app/Objective.js',

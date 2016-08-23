@@ -5,26 +5,26 @@ badges.db = [
 
     new Badge("tick 1", "Lost coordinator", "A month of your coordination is passed. You understand what's what.",
         function () { return (Gatherer.events.ticks > 30); }, function () {}),
-    new Badge("tick 2", "Verified coordinator", "A ear of your coordination is passed. You steeled enough to avoid mistakes.",
-        function () { return (Gatherer.events.ticks > 356); }, function () { Player.revealSecret('upgrade_department'); Player.revealSecret('cancel_event');  }),
-    new Badge("tick 3", "Experienced coordinator", "A ten ear of your coordination is passed. You ready to invent something new.",
-        function () { return (Gatherer.events.ticks > 356*10); }, function () { Player.revealSecret('invent');  }),
-    new Badge("tick 4", "Hardened coordinator", "A century of your coordination is passed.",
+    new Badge("tick 2", "Verified coordinator", "A year of your coordination is passed. You steeled enough to avoid mistakes.",
+        function () { return (Gatherer.events.ticks > 356); }, function () {}),
+    new Badge("tick 3", "Experienced coordinator", "A ten year of your coordination is passed. You ready to invent something new.",
+        function () { return (Gatherer.events.ticks > 356*10); }, function () {}),
+    new Badge("tick 4", "Hardened coordinator", "A century of your coordination is passed. You elder and htonic.",
         function () { return (Gatherer.events.ticks > 356*100); }, function () {}),
 
     
     new Badge("resources 1", "Resources dabbling", "You collect some.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000); }, function () { Player.revealSecret('objectives'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500); }, function () { Player.revealSecret('objectives'); goals.achieve('resources 1'); }),
     new Badge("resources 2", "Resources collector", "You collect many.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 10); }, function () { Player.revealSecret('events'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 10); }, function () { Player.revealSecret('events'); goals.achieve('resources 2'); }),
     new Badge("resources 3", "Resources achiever", "You have wealth.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 100); }, function () { Player.revealSecret('sharing'); }),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 100); }, function () { Player.revealSecret('sharing'); goals.achieve('resources 3'); }),
     new Badge("resources 4", "Resources tycoon", "You have a huge savings.",
-        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 1000 * 1000); }, function () {}),
+        function () { return ((Gatherer.collection.likes * 1 + Gatherer.collection.design * 10 + Gatherer.collection.money * 100 + Gatherer.collection.ideas * 1000) > 500 * 1000); }, function () {}),
 
 
     new Badge("communication 1", "Talking", "Communication upgraded to level 15.",
-        function () { return (Civilization.updates.communication.level >= 15); }, function () {}),
+        function () { return (Civilization.updates.communication.level >= 15); }, function () { Player.revealSecret('attentiveness'); goals.achieve('communication 1'); }),
     new Badge("communication 2", "Discussing", "Communication upgraded to level 30.",
         function () { return (Civilization.updates.communication.level >= 30); }, function () {}),
     new Badge("communication 3", "Telepathy", "Communication upgraded to level 45.",
@@ -42,7 +42,7 @@ badges.db = [
         function () { return (Civilization.updates.attentiveness.level >= 60); }, function () {}),
 
     new Badge("teamwork 1", "Group work", "Teamwork upgraded to level 15.",
-        function () { return (Civilization.updates.teamwork.level >= 15); }, function () {}),
+        function () { return (Civilization.updates.teamwork.level >= 15); }, function () { Player.revealSecret('upgrade_department'); goals.achieve('teamwork 1'); }),
     new Badge("teamwork 2", "Command work", "Teamwork upgraded to level 30.",
         function () { return (Civilization.updates.teamwork.level >= 30); }, function () {}),
     new Badge("teamwork 3", "Cooperative work", "Teamwork upgraded to level 45.",
@@ -61,7 +61,7 @@ badges.db = [
 
 
     new Badge("popularization 1", "Light of Science", "Popularization upgraded to level 15.",
-        function () { return (Civilization.works.popularization.level >= 15); }, function () {}),
+        function () { return (Civilization.works.popularization.level >= 15); }, function () { Player.revealSecret('education'); goals.achieve('popularization 1'); }),
     new Badge("popularization 2", "Trend to quantum", "Popularization upgraded to level 30.",
         function () { return (Civilization.works.popularization.level >= 30); }, function () {}),
     new Badge("popularization 3", "Viral ideas", "Popularization upgraded to level 45.",
@@ -79,7 +79,7 @@ badges.db = [
         function () { return (Civilization.works.education.level >= 60); }, function () {}),
 
     new Badge("motivation 1", "Working with target", "Motivation upgraded to level 15.",
-        function () { return (Civilization.works.motivation.level >= 15); }, function () {}),
+        function () { return (Civilization.works.motivation.level >= 15); }, function () { Player.revealSecret('activism'); goals.achieve('motivation 1'); }),
     new Badge("motivation 2", "Working with sense", "Motivation upgraded to level 30.",
         function () { return (Civilization.works.motivation.level >= 30); }, function () {}),
     new Badge("motivation 3", "Target of life", "Motivation upgraded to level 45.",
@@ -134,28 +134,54 @@ badges.db = [
         function () { return (Player.departments.docs.level >= 60); }, function () {}),
 
 
-    new Badge("volunteers 1", "Group", "Founded 15 volunteers."),
-    new Badge("volunteers 2", "Company", "Founded 30 volunteers."),
-    new Badge("volunteers 3", "Community", "Founded 45 volunteers."),
-    new Badge("volunteers 4", "Organization", "Founded 60 volunteers."),
-
-    new Badge("learn 1", "", "You learn how to learning."),
-       // function () { return (Gatherer.events.increase_skill < 15 && Gatherer.events.increase_skill + 1 >= 15)}),
-    new Badge("learn 2", "", "You learn how to learning right."),
-    new Badge("learn 3", "", "You learn how to learning fast."),
-    new Badge("learn 4", "", "You learn how to learning things you needed."),
-
+    new Badge("volunteers 1", "Group", "Founded 15 volunteers.",
+        function () { return (Player.volunteers_memory >= 15); }, function () { Player.revealSecret('teamwork'); goals.achieve('volunteers 1'); Goal.displayed_goals_count++; }),
+    new Badge("volunteers 2", "Company", "Founded 30 volunteers.",
+        function () { return (Player.volunteers_memory >= 30); }, function () { Player.revealSecret('departments'); goals.achieve('volunteers 2'); }),
+    new Badge("volunteers 3", "Community", "Founded 45 volunteers.",
+        function () { return (Player.volunteers_memory >= 45); }, function () { Player.revealSecret('motivation'); goals.achieve('volunteers 3'); }),
+    new Badge("volunteers 4", "Organization", "Founded 60 volunteers.",
+        function () { return (Player.volunteers_memory >= 60); }, function () { Goal.displayed_goals_count++; }),
 
 
     new Badge("share 1", "Ready to learn", "You shared your knowledge 15 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 15); }, function () { Player.revealSecret('skills'); Player.revealSecret('self_study'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 15); }, function () { Player.revealSecret('skills'); Player.revealSecret('self_study'); goals.achieve('share 1'); }),
     new Badge("share 2", "Ready to read", "You shared your knowledge 30 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 30); }, function () { Player.revealSecret('books'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 30); }, function () { Player.revealSecret('books'); goals.achieve('share 2'); }),
     new Badge("share 3", "Ready to work", "You shared your knowledge 45 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 45); }, function () { Player.revealSecret('work'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 45); }, function () { Player.revealSecret('work'); goals.achieve('share 3'); }),
     new Badge("share 4", "Ready to lead", "You shared your knowledge 60 times.",
-        function () { return (Gatherer.events.knowledge_sharing >= 60); }, function () { Player.revealSecret('pet_project'); }),
+        function () { return (Gatherer.events.knowledge_sharing >= 60); }, function () { Player.revealSecret('pet_project'); goals.achieve('share 4'); }),
 
+
+    new Badge("hold_events 1", "", "You was hold 15 events.",
+        function () { return (Gatherer.events.hold_events >= 15); }, function () { Player.revealSecret('cancel_event'); goals.achieve('hold_events 1'); }),
+    new Badge("hold_events 2", "", "You was hold 30 events.",
+        function () { return (Gatherer.events.hold_events >= 30); }, function () { Player.revealSecret('invent'); goals.achieve('hold_events 2');  }),
+    new Badge("hold_events 3", "", "You was hold 45 events.",
+        function () { return (Gatherer.events.hold_events >= 45); }, function () {}),
+    new Badge("hold_events 4", "", "You was hold 60 events.",
+        function () { return (Gatherer.events.hold_events >= 60); }, function () {}),
+
+
+    new Badge("accepted_lectures 1", "A new brunch", "You accepted 15 lectures.",
+        function () { return (lectures.db.length >= 60 + 15); }, function () { Player.revealSecret('add_time'); goals.achieve('accepted_lectures 1'); }),
+    new Badge("accepted_lectures 2", "Stable brunch", "You accepted 30 lectures.",
+        function () { return (lectures.db.length >= 60 + 30); }, function () { Player.revealSecret('change_theme'); goals.achieve('accepted_lectures 2');  }),
+    new Badge("accepted_lectures 3", "Old brunch", "You accepted 45 lectures.",
+        function () { return (lectures.db.length >= 60 + 45); }, function () {}),
+    new Badge("accepted_lectures 4", "Main brunch", "You accepted 60 lectures.",
+        function () { return (lectures.db.length >= 60 + 60); }, function () {}),
+
+
+    new Badge("learn 1", "", "You learn how to learning.",
+        function () { return (Gatherer.events.increase_skill >= 15); }),
+    new Badge("learn 2", "", "You learn how to learning right.",
+        function () { return (Gatherer.events.increase_skill >= 30); }),
+    new Badge("learn 3", "", "You learn how to learning fast.",
+        function () { return (Gatherer.events.increase_skill >= 45); }),
+    new Badge("learn 4", "", "You learn how to learning things you needed.",
+        function () { return (Gatherer.events.increase_skill >= 60); }),
 
     new Badge("selfStudy 1", "", "15 Self Studies"),
     new Badge("selfStudy 2", "", "30 Self Studies"),
@@ -187,25 +213,45 @@ badges.db = [
 
 
 
-    new Badge("writing 1", "", "Mom thinks that you write as Dostoevsky."),
-    new Badge("writing 2", "", "You think that you write as Dostoevsky."),
-    new Badge("writing 3", "", "Everyone thinks that you write as Dostoevsky."),
-    new Badge("writing 4", "", "Dostoevsky thinks you write as Dostoevsky."),
+    new Badge("writing 1", "", "Mom thinks that you write as Dostoevsky.",
+        function () { return Player[writing] >= 15; }, function () { badges.achieve(writing + " 1"); }),
+    new Badge("writing 2", "", "You think that you write as Dostoevsky.",
+        function () { return Player[writing] >= 30; }, function () { badges.achieve(writing + " 2"); 
+            Player.addSupervision(skills_departments[writing]); }),
+    new Badge("writing 3", "", "Everyone thinks that you write as Dostoevsky.",
+        function () { return Player[writing] >= 45; }, function () { badges.achieve(writing + " 3"); }),
+    new Badge("writing 4", "", "Dostoevsky thinks you write as Dostoevsky.",
+        function () { return Player[writing] >= 60; }, function () { badges.achieve(writing + " 4"); }),
 
-    new Badge("drawing 1", "", "You can draw a cat."),
-    new Badge("drawing 2", "", "You can draw a man."),
-    new Badge("drawing 3", "", "You can draw site."),
-    new Badge("drawing 4", "", "You do can draw a cat."),
+    new Badge("drawing 1", "", "You can draw a cat.",
+        function () { return Player[drawing] >= 15; }, function () { badges.achieve(drawing + " 1"); }),
+    new Badge("drawing 2", "", "You can draw a man.",
+        function () { return Player[drawing] >= 30; }, function () { badges.achieve(drawing + " 2");
+        Player.addSupervision(skills_departments[drawing]); }),
+    new Badge("drawing 3", "", "You can draw site.",
+        function () { return Player[drawing] >= 45; }, function () { badges.achieve(drawing + " 3"); }),
+    new Badge("drawing 4", "", "You do can draw a cat.",
+        function () { return Player[drawing] >= 60; }, function () { badges.achieve(drawing + " 4"); }),
 
-    new Badge("programming 1", "", "You feel the difference between a code and a broken encoding."),
-    new Badge("programming 2", "", "You feel the difference between a Class and an Object."),
-    new Badge("programming 3", "", "You feel the difference between Mixins and Traits."),
-    new Badge("programming 4", "", "You feel the difference between the Wrapper, the Proxy, the Facade and the Composite."),
+    new Badge("programming 1", "", "You feel the difference between a code and a broken encoding.",
+        function () { return Player[programming] >= 15; }, function () { badges.achieve(programming + " 1"); }),
+    new Badge("programming 2", "", "You feel the difference between a Class and an Object.",
+        function () { return Player[programming] >= 30; }, function () { badges.achieve(programming + " 2"); 
+        Player.addSupervision(skills_departments[programming]); }),
+    new Badge("programming 3", "", "You feel the difference between Mixins and Traits.",
+        function () { return Player[programming] >= 45; }, function () { badges.achieve(programming + " 3"); }),
+    new Badge("programming 4", "", "You feel the difference between the Wrapper, the Proxy, the Facade and the Composite.",
+        function () { return Player[programming] >= 60; }, function () { badges.achieve(programming + " 4"); }),
 
-    new Badge("management 1", "", "You think that people do not listen to you."),
-    new Badge("management 2", "", "You think that people are listening to you."),
-    new Badge("management 3", "", "You know that people are listening to you."),
-    new Badge("management 4", "", "You know that people do not listen to you."),
+    new Badge("management 1", "", "You think that people do not listen to you.",
+        function () { return Player[management] >= 15; }, function () { badges.achieve(management + " 1"); }),
+    new Badge("management 2", "", "You think that people are listening to you.",
+        function () { return Player[management] >= 30; }, function () { badges.achieve(management + " 2"); 
+        Player.addSupervision(skills_departments[management]); }),
+    new Badge("management 3", "", "You know that people are listening to you.",
+        function () { return Player[management] >= 45; }, function () { badges.achieve(management + " 3"); }),
+    new Badge("management 4", "", "You know that people do not listen to you.",
+        function () { return Player[management] >= 60; }, function () { badges.achieve(management + " 4"); }),
 
 
     new Badge("act 1", "", "You act 15 times."),

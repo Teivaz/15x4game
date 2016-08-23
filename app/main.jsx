@@ -46,7 +46,6 @@ window.onload = function() {
     Player.revealSecret('seek');
     Player.revealSecret('popularization');
     Player.revealSecret('communication');
-    Player.revealSecret('attentiveness');
     //Player.revealSecret('motivation');
     events.db.push(Event.generator());
 
