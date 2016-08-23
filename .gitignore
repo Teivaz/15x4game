@@ -1,3 +1,25 @@
-
+# Project files
 .idea/workspace.xml
 .idea/*
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Dependency directories
+node_modules
+jspm_packages
+
+# Optional npm cache directory
+.npm
+
+# Development files
+/build/development/*

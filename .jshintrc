@@ -1,0 +1,5 @@
+{
+	"asi": true, // Semicolons farewell
+	"browser": true,
+	"esversion": 5 // To use ES2016 features we'll need to babelify
+}

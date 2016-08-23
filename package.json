@@ -1,0 +1,30 @@
+{
+  "name": "15x4game",
+  "version": "1.0.0",
+  "description": "Rpg-like economic strategy about moral acting and decisions making",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Teivaz/15x4game.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Teivaz/15x4game/issues"
+  },
+  "homepage": "https://github.com/Teivaz/15x4game#readme",
+  "devDependencies": {
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-react": "^3.1.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "jquery": "^3.1.0",
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1"
+  }
+}
