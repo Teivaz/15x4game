@@ -1,3 +1,4 @@
+//var system_events = require('./system-events');
 
 var LogPanelSingleFilter = React.createClass({
     getInitialState: function() {
@@ -20,17 +21,16 @@ var LogPanelSingleFilter = React.createClass({
 
 var SideBarReact = React.createClass({
     getInitialState: function() {
-        // TODO: fix next block
-        var self = this;
-        window["LogSetTick"] = function(day) {
-            self.setState({day: day});
-        }
-
         return {
             open: true,
             filters: ["Badge", "Not enough", "Paid", "Gained", "Reward", "Max", "Lecturer"],
             day: 0
         };
+    },
+    componentDidMount: function() {
+        system_events.time.register(this, function(time) {
+            this.setState({day: time.ticks});
+        });
     },
     onFilter: function(filter, state) {
         this.refs.log.filter(filter, !state);
@@ -72,14 +72,13 @@ var SideBarReact = React.createClass({
 
 var LogPanelContent = React.createClass({
     getInitialState: function(){
-        var self = this;
-        window["LogMessage"] = function(filter, text) {
-            self.addMesage({filter: filter, text: text});
-        }
         return {
             messages: [],
             filter: {}
         };
+    },
+    componentDidMount: function() {
+        system_events.logger.register(this, this.addMesage);  
     },
     clear: function(){
         this.setState({messages: []});

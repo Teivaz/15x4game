@@ -4,10 +4,21 @@
 function message(text) {
     if(text == "A new day."){}
     //else if (text.includes("Balance ratio")) {}
-    else{LogMessage(false,text);}
+    else{
+        message.log('', text);
+    }
     console.log(text);
-}
 
+}
+message.log = function(filter, text) {
+    system_events.logger.dispatch({
+        filter: filter,
+        text: text
+     });
+}
+message.notEnough = function(text) {
+    message.log('not_enough', text);
+}
 
 
 

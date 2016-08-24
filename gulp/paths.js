@@ -7,9 +7,14 @@ module.exports = {
 		'app/**/*.jsx'
 		],
 	scripts: [ // replace it with xscripts later
+		'app/SystemEvents.js',
+		'app/main.jsx',
 		'js/bootstrap.js',
+		'app/parts/Gauges.jsx',
+		'app/parts/Billet.jsx',
 		'app/parts/Billet.js',
 		'app/parts/Workplace.js',
+		'app/parts/Workplace.jsx',
 		'app/scratches.js',
 		'app/knowledge.js',
 		'app/draw.js',
@@ -21,7 +26,7 @@ module.exports = {
 		'app/dungeon/Unit.js',
 		'app/Gatherer.js',
 		'app/Building.js',
-		'app/Civilization.js',
+		'app/Civilization.jsx',
 		'app/Department.js',
 		'app/Player.js',
 		'app/Storages.js',
@@ -42,8 +47,7 @@ module.exports = {
 		'app/lectures.db.js',
 		'app/LogPanel.jsx',
 		'app/tips.js',
-		'app/time.jsx',
-		'app/main.jsx'
+		'app/time.jsx'
 	],
 	styles: ['css/*.css'],
 }

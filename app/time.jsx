@@ -1,3 +1,4 @@
+//var system_events = require('./system-events');
 
 var Time = {
     season: 'winter'
@@ -15,13 +16,16 @@ var TimeReact = React.createClass({
 
     tick: function () {
         var ticks = this.state.ticks + 1;
-        this.setState({
+        var season = ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 365) / (365 / 4))];
+        var state = {
             ticks: ticks,
             day:  ticks % 365,
             year:  Math.floor(ticks / 365),
-            season:  ['winter', 'spring', 'summer', 'autumn'][Math.floor((ticks % 365) / (365 / 4))],
-        })
-        return ticks;
+            season: season,
+        };
+        this.setState(state);
+
+        system_events.time.dispatch(state);
     },
 
     render: function() {

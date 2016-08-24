@@ -13,7 +13,6 @@ function draw_all() {
     w("volunteers_indicator", Player.volunteers.toFixed(2));
     w("volunteers_memory_indicator", Player.volunteers_memory.toFixed(2));
 
-    w("culture_container", Civilization.getHTML());
     w("departments_container", Department.getHTML());
     w("resources_container", Storages.getR1HTML());
     w("С2_resources_container", Storages.getC2HTML());

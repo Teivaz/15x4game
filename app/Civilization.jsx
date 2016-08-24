@@ -1,6 +1,6 @@
+//var ReactDispatcher = require('react-flux-dispatcher');
 
-
-var Civilization = {
+var Civilization={
     happiness: 0,
 
     updates: {
@@ -20,9 +20,11 @@ var Civilization = {
             function () { return (Time.season == 'summer') ? 2 : 1; }),
     }
 };
+Civilization.getHappiness = function() {
+    return 0;
+}
 
 Civilization.tick = function() {
-  //  console.log(Player, Civilization);
     Player.culture_rate = 0;
 
     this.happiness = 0;
@@ -72,63 +74,138 @@ Civilization.tick = function() {
 
 };
 
-Civilization.getHappiness = function() {
-    return (1+(Civilization.happiness / 100));
-};
+// TODO: remove this hackery
+function fakeCivilization(self) {
+    var fake = {
+        updates: {communication:{},attentiveness:{},teamwork:{},sharing:{}},
+        works: {popularization:{},education:{},motivation:{},activism:{}},
+        getHappiness: self.getHappiness,
+        tick: Civilization.tick,
+
+        setState: self.setState.bind(self)
+    };
+
+    function prop(field, object, property) {
+        Object.defineProperty(fake[field][object], property, {
+            set: function(val) {var state={};state[property]=val;self.refs[object].setState(state);},
+            get: function() {return self.refs[object].state[property];}
+        })
+    }
+    Object.defineProperty(fake, 'happiness', {
+        get: self.getHappiness,
+        set: self.setHappiness
+    });
+    for(var key in fake.updates) {
+        prop('updates', key, 'level');
+    }
+    for(var key in fake.works) {
+        prop('works', key, 'level');
+    }
+    return fake;
+}
 
 
 // TODO: culture_rate should be in config
 var CivilizationReact = React.createClass({
+    updates: [
+        {
+            name: 'communication', 
+            base_cost: {culture: culture_rate}, 
+            cost_grow_rate: 1.6,
+            text: 'Raises culture soft-cap.'
+        },
+        {
+            name: 'attentiveness',
+            base_cost: {culture: culture_rate},
+            cost_grow_rate: 1.7,
+            text: "Soften culture soft-cap."
+        },
+        {
+            name: 'teamwork',
+            base_cost: {culture: culture_rate * 5},
+            cost_grow_rate: 1.4,
+            text: 'Expands the maximum size of the teams.'
+        },
+        {
+            name: 'sharing',
+            base_cost: {culture: culture_rate * 10},
+            cost_grow_rate: 1.7,
+            text: 'Expands maximum storage size.'
+        }
+    ],
+    works: [
+        {
+            name: 'popularization',
+            base_cost: {culture: culture_rate},
+            cost_grow_rate: 1.4, 
+            text: "Slowly increase volunteers, consuming culture.",
+            season: 'winter'
+        },
+        {
+            name: 'education',
+            base_cost: {culture: culture_rate},
+            cost_grow_rate: 1.5,
+            text: "Slowly increase knowledge, consuming enthusiasm.",
+            season: 'autumn'
+        },
+        {
+            name: 'motivation',
+            base_cost: {culture: culture_rate},
+            cost_grow_rate: 1.6,
+            text: "Increases happiness, consuming culture.",
+            season: 'spring'
+        },
+        {
+            name: 'activism',
+            base_cost: {culture: culture_rate},
+            cost_grow_rate: 1.7,
+            text: "Decreases happiness, slowly increase enthusiasm and action points.",
+            season:'summer'
+        }
+    ],
     getInitialState: function(){
+        // TODO: remove me if you dare
+        Civilization = fakeCivilization(this);
         return {
             open: true,
 
             culture: 0,
             culture_soft_cap: 0,
             culture_rate: 0,
+            season: 'winter',
 
             happiness: 0,
-            secrets: [], //Player.found_secrets,
-            updates: [
-                {
-                    name: 'communication', 
-                    base_cost: {culture: culture_rate}, 
-                    cost_grow_rate: 1.6,
-                    text: 'Raises culture soft-cap.'
-                },
-                {
-                    name: 'attentiveness',
-                    base_cost: {culture: culture_rate},
-                    cost_grow_rate: 1.7,
-                    text: "Soften culture soft-cap."
-                },
-                {
-                    name: 'teamwork',
-                    base_cost: {culture: culture_rate * 5},
-                    cost_grow_rate: 1.4,
-                    text: 'Expands the maximum size of the teams.'
-                },
-                {
-                    name: 'sharing',
-                    base_cost: {culture: culture_rate * 10},
-                    cost_grow_rate: 1.7,
-                    text: 'Expands maximum storage size.'
-                },
-            ],
-            works: []
+            secrets: [] //Player.found_secrets,
         };
     },
-    updateCulture: function(culture) {
-        this.setState({culture: culture})
+    componentDidMount: function() {
+        system_events.player.register(this, this.setState);
+        system_events.time.register(this, this.setState);
+    },
+    componentWillUpdate: function() {
+        var refs = this.refs;
+        var season = this.state.season;
+        var volunteers = this.state.volunteers;
+        this.works.forEach( function(work) {
+            refs[work.name].setState({
+                season: season,
+                volunteers: volunteers
+            });
+        });
+    },
+    getHappiness: function() {
+        return (1+(this.state.happiness / 100));
+    },
+    setHappiness: function(happiness) {
+        this.setState({happiness: happiness});
     },
     onCollapse: function() {
-        this.setState({open: !this.state.open})
+        this.setState({open: !this.state.open});
     },
     unlockSecret: function(secret) {
-        this.setState({secrets: this.state.secrets.concat(secret)})
+        this.setState({secrets: this.state.secrets.concat(secret)});
     },
     render: function() {
-        var updates = this.state.updates;
         var culture = this.state.culture;
         var culture_soft_cap = this.state.culture_soft_cap;
         var happiness = this.state.happiness;
@@ -152,76 +229,24 @@ var CivilizationReact = React.createClass({
                 <ProgressGauge text="Culture: " a={culture} b={culture_soft_cap} aToFixed='2' bToFixed='2'>
                     (<span>{culture_rate.toFixed(2)}</span>/day)
                 </ProgressGauge>
-                <ReactBootstrap.Collapse in={this.state.open} >
+                <ReactBootstrap.Collapse in={this.state.open}>
+                    <div>
                     <div className="flex-container-column" id="culture">
                         <div className="flex-container-row" id="culture_updates">
-                            {updates.map(function(update, i){
+                            {this.updates.map(function(update, i){
                                 return <BilletReact secretClass={secretClass(update)} {...update} ref={update.name} key={i}/>
                             })}
                         </div>
                         <br />
                         <div className="flex-container-row" id="culture_works">
-                            {}
+                            {this.works.map(function(work, i){
+                                return <WorkplaceReact secretClass={secretClass(work)} {...work} ref={work.name} key={i}/>
+                            })}
                         </div>
+                    </div>
                     </div>
                 </ReactBootstrap.Collapse>
             </div>
         )
     }
-})
-
-Civilization.getHTML = function() {
-
-
-    var html = `    <hr>
-        <button class="collapsar" data-toggle="collapse" data-target="#culture_collapse">-</button>
-        <div>Community. <span title="many factors can change happiness">Happiness bonus: <span id="global_bonus_indicator">${Civilization.happiness.toFixed(2)}</span>%</span></div>
-        <div>Culture: <span id="culture_indicator">${Player.culture.toFixed(2)}</span>/<span id="culture_limit_indicator">${Player.culture_soft_cap.toFixed(2)}</span> (<span id="culture_rate_indicator">${Player.culture_rate.toFixed(2)}</span>/sec)</div>
-        <div class="collapse in" id="culture_collapse">
-            <div class="flex-container-column" id="culture">
-                <div class="flex-container-row" id="culture_updates">`;
-
-    for (var key in Civilization.updates) {
-        var update = Civilization.updates[key];
-        var secret_class = (Player.found_secrets.indexOf(update.name) == -1) ? " init_hidden " : "";
-        html += update.getHTML(key, secret_class, 'Civilization.upgradeUpdate');
-    }
-
-    html += `</div><br><div class="flex-container-row " id="culture_works">`;
-
-    for (var key in Civilization.works) {
-        var work = Civilization.works[key];
-        var secret_class = (Player.found_secrets.indexOf(work.name) == -1) ? " init_hidden " : "";
-        html += work.getHTML(key, secret_class, 'Civilization.upgradeWork');
-    }
-
-    html += `</div></div></div>`;
-
-    return '';
-};
-
-Civilization.upgradeUpdate = function(update) {
-    this.updates[update].upgrade();
-};
-
-Civilization.getUpgradeCostUpdate = function(update) {
-    return this.updates[update].getUpgradeCost();
-};
-
-Civilization.increase = function(work) {
-    this.works[work].increase();
-};
-
-Civilization.decrease = function(work) {
-    this.works[work].decrease();
-};
-
-Civilization.upgradeWork = function(work) {
-    this.works[work].upgrade();
-};
-
-Civilization.getUpgradeCostWork = function(work) {
-    return this.works[work].getUpgradeCost();
-};
-
-
+});

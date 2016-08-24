@@ -41,10 +41,10 @@ gulp.task('build', function(){
 		presets: ['react']
 	}))
 	.pipe(concat('main.js'))
-	//.pipe(browserify({
-	//	insertGlobals : true,
-	//	debug : true
-	//}).on('error', e => console.log(e)))
+	.pipe(browserify({
+		insertGlobals : true,
+		debug : true
+	}).on('error', e => console.log(e)))
 	.pipe(sourcemaps.write())
 	.pipe(gulp.dest(paths.dest))
 })
@@ -59,10 +59,10 @@ gulp.task('build-release', function(){
 		presets: ['react']
 	}))
 	.pipe(concat('main.js'))
-	//.pipe(browserify({
-	//	insertGlobals : true,
-	//	debug : false
-	//}).on('error', e => console.log(e)))
+	.pipe(browserify({
+		insertGlobals : true,
+		debug : false
+	}).on('error', e => console.log(e)))
 	//.pipe(uglify())
 	.pipe(gulp.dest(paths.dest_release))
 })
