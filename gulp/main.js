@@ -7,7 +7,7 @@ const del = require('del')
 /* JS */
 const browserify = require('gulp-browserify')
 const sourcemaps = require('gulp-sourcemaps')
-const react = require('gulp-react')
+const babel = require('gulp-babel')
 
 gulp.task('set-env-release', function(){
 	paths.dest = paths.dest_release
@@ -37,7 +37,9 @@ gulp.task('build', function(){
 	process.env.NODE_ENV = 'development'
 	return gulp.src(paths.scripts)
 	.pipe(sourcemaps.init())
-	.pipe(react())
+	.pipe(babel({
+		presets: ['react']
+	}))
 	.pipe(concat('main.js'))
 	//.pipe(browserify({
 	//	insertGlobals : true,
@@ -53,7 +55,9 @@ gulp.task('watch-build', function(){
 gulp.task('build-release', function(){
 	process.env.NODE_ENV = 'production'
 	return gulp.src(paths.scripts)
-	.pipe(react())
+	.pipe(babel({
+		presets: ['react']
+	}))
 	.pipe(concat('main.js'))
 	//.pipe(browserify({
 	//	insertGlobals : true,
